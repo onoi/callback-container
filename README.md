@@ -12,7 +12,7 @@ code base has been extracted from [Semantic MediaWiki][smw] and is now being dep
 
 ## Requirements
 
-PHP 5.3 / HHVM 3.3 or later
+PHP 5.3 / HHVM 3.5 or later
 
 ## Installation
 
@@ -53,24 +53,28 @@ class FooCallbackContainer implements CallbackContainer {
 $deferredCallbackLoader = new DeferredCallbackLoader();
 
 $deferredCallbackLoader->registerCallbackContainer( new FooCallbackContainer() );
-$instance = $deferredCallbackLoader->load( 'Foo' );
-$instance = $deferredCallbackLoader->singleton( 'Foo' );
+$instance = $deferredCallbackLoader->load( 'Foo', array( 'a', 'b' ) );
+$instance = $deferredCallbackLoader->singleton( 'Foo', array( 'a', 'b' ) );
 ```
 
-If a callback handler is registered with a return type then its returning instance
-will typed checked.
+If a callback handler is registered with a return type then the returning instance
+will be checked against the expected type and in case of a mismatch a
+`RuntimeException` is thrown.
 
 ## Contribution and support
 
 If you want to contribute work to the project please subscribe to the
-developers mailing list and have a look at the [contribution guidelinee](/CONTRIBUTING.md). A list of people who have made contributions in the past can be found [here][contributors].
+developers mailing list and have a look at the [contribution guidelinee](/CONTRIBUTING.md). A list
+of people who have made contributions in the past can be found [here][contributors].
 
 * [File an issue](https://github.com/onoi/callback-container/issues)
 * [Submit a pull request](https://github.com/onoi/callback-container/pulls)
 
 ### Tests
 
-The library provides unit tests that covers the core-functionality normally run by the [continues integration platform][travis]. Tests can also be executed manually using the `composer phpunit` command from the root directory.
+The library provides unit tests that covers the core-functionality normally run by the
+[continues integration platform][travis]. Tests can also be executed manually using the
+`composer phpunit` command from the root directory.
 
 ### Release notes
 

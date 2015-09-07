@@ -126,7 +126,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testInjectInstanceToExistingCallbackHandler() {
+	public function testInjectInstanceForExistingRegisteredCallbackHandler() {
 
 		$stdClass = $this->getMockBuilder( '\stdClass' )
 			->disableOriginalConstructor()
@@ -207,7 +207,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testTryToLoadHandlerWithWrongReturnTypeThrowsException() {
+	public function testTryToLoadCallbackHandlerWithTypeMismatchThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -237,7 +237,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		$instance->singleton( new \stdClass );
 	}
 
-	public function testTryToLoadRecursiveRegisterdCallbackHandlerThrowsException() {
+	public function testTryToLoadCallbackHandlerWithCircularReferenceThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -251,7 +251,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		$instance->load( 'Foo' );
 	}
 
-	public function testTryToLoadSingletonRecursiveRegisterdCallbackHandlerThrowsException() {
+	public function testTryToLoadSingletonCallbackHandlerWithCircularReferenceThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -265,7 +265,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		$instance->singleton( 'Foo' );
 	}
 
-	public function testTryToUseInvalidNameForCallbackHandlerThrowsException() {
+	public function testTryToUseInvalidNameOnCallbackHandlerRegistrationThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -275,7 +275,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		} );
 	}
 
-	public function testTryToUseInvalidNameForObjectRegistrationThrowsException() {
+	public function testTryToUseInvalidNameOnObjectRegistrationThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -283,7 +283,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		$instance->registerObject( new \stdClass, new \stdClass );
 	}
 
-	public function testTryToUseInvalidNameForTypeRegistrationThrowsException() {
+	public function testTryToUseInvalidNameOnTypeRegistrationThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
