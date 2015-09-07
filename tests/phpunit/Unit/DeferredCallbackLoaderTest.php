@@ -42,11 +42,11 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerCallback( '\stdClass', function() {
+		$instance->registerCallback( 'Foo', function() {
 			return new \stdClass;
 		} );
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 
 		$this->assertEquals(
 			new \stdClass,
@@ -59,6 +59,36 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$instance->deregister( 'Foo' );
+	}
+
+	public function testLoadTypedReturn() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function() {
+			return new \stdClass;
+		} );
+
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
+
+		$this->assertEquals(
+			new \stdClass,
+			$instance->load( 'Foo' )
+		);
+	}
+
+	public function testLoadUntypedHandler() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function() {
+			return 'abc';
+		} );
+
+		$this->assertEquals(
+			'abc',
+			$instance->load( 'Foo' )
+		);
 	}
 
 	public function testRegisterCallbackContainer() {
@@ -82,7 +112,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 		$instance->registerObject( 'Foo', $expected );
 
 		$this->assertEquals(
@@ -96,18 +126,38 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testInjectInstanceToExistingCallbackHandler() {
+
+		$stdClass = $this->getMockBuilder( '\stdClass' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$instance = new DeferredCallbackLoader( new FooCallbackContainer() );
+		$instance->singleton( 'Foo' );
+
+		$instance->registerObject( 'Foo', $stdClass );
+
+		$this->assertTrue(
+			$stdClass === $instance->load( 'Foo' )
+		);
+
+		$this->assertTrue(
+			$stdClass === $instance->singleton( 'Foo' )
+		);
+	}
+
 	public function testLoadParameterizedInstance() {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerCallback( '\stdClass', function( $a ) {
+		$instance->registerCallback( 'Foo', function( $a ) {
 			$stdClass = new \stdClass;
 			$stdClass->a = $a;
 
 			return $stdClass;
 		} );
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 
 		$this->assertEquals(
 			'abc',
@@ -119,14 +169,14 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerCallback( '\stdClass', function( $a ) {
+		$instance->registerCallback( 'Foo', function( $a ) {
 			$stdClass = new \stdClass;
 			$stdClass->a = $a;
 
 			return $stdClass;
 		} );
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 
 		$singleton = $instance->singleton( 'Foo', '123' );
 
@@ -139,44 +189,66 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testLoadUnregisteredCallbackHandlerToReturnNull() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$this->assertNull(
+			$instance->load( 'Foo' )
+		);
+	}
+
+	public function testLoadUnregisteredCallbackHandlerAsSingletonToReturnNull() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$this->assertNull(
+			$instance->singleton( 'Foo' )
+		);
+	}
+
+	public function testTryToLoadHandlerWithWrongReturnTypeThrowsException() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function() {
+			return new \stdClass;
+		} );
+
+		$instance->registerExpectedReturnType( 'Foo', 'Bar' );
+
+		$this->setExpectedException( 'RuntimeException' );
+		$instance->load( 'Foo' );
+	}
+
+	public function testTryToUseInvalidNameForCallbackHandlerOnLoadThrowsException() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$this->setExpectedException( 'InvalidArgumentException' );
+		$instance->load( new \stdClass );
+	}
+
+	public function testTryToUseInvalidNameForCallbackHandlerOnSingletonThrowsException() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$this->setExpectedException( 'InvalidArgumentException' );
+		$instance->singleton( new \stdClass );
+	}
+
 	public function testTryToLoadRecursiveRegisterdCallbackHandlerThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
 		$this->setExpectedException( 'RuntimeException' );
 
-		$instance->registerCallback( '\stdClass', function() use ( $instance ) {
+		$instance->registerCallback( 'Foo', function() use ( $instance ) {
 			return $instance->load( 'Foo' );
 		} );
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 		$instance->load( 'Foo' );
-	}
-
-	public function testTryToLoadNonAliasedCallbackHandlerThrowsException() {
-
-		$instance = new DeferredCallbackLoader();
-
-		$this->setExpectedException( 'RuntimeException' );
-
-		$instance->registerCallback( '\stdClass', function() use ( $instance ) {
-			return new \stdClass;
-		} );
-
-		$instance->load( 'Foo' );
-	}
-
-	public function testTryToLoadForNonStringNamedCallbackHandlerThrowsException() {
-
-		$instance = new DeferredCallbackLoader();
-
-		$this->setExpectedException( 'InvalidArgumentException' );
-
-		$instance->registerCallback( '\stdClass', function() use ( $instance ) {
-			return $instance->load( 'Foo' );
-		} );
-
-		$instance->load( new \stdClass );
 	}
 
 	public function testTryToLoadSingletonRecursiveRegisterdCallbackHandlerThrowsException() {
@@ -189,40 +261,11 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 			return $instance->singleton( 'Foo' );
 		} );
 
-		$instance->registerAlias( 'Foo', '\stdClass' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 		$instance->singleton( 'Foo' );
 	}
 
-	public function testTryToLoadSingletonForNonStringNamedCallbackHandlerThrowsException() {
-
-		$instance = new DeferredCallbackLoader();
-
-		$this->setExpectedException( 'InvalidArgumentException' );
-
-		$instance->registerCallback( '\stdClass', function() use ( $instance ) {
-			return $instance->load( 'Foo' );
-		} );
-
-		$instance->singleton( new \stdClass );
-	}
-
-	public function testTryToLoadUnregisterCallbackHandlerThrowsException() {
-
-		$instance = new DeferredCallbackLoader();
-
-		$this->setExpectedException( 'RuntimeException' );
-		$instance->load( 'Foo' );
-	}
-
-	public function testTryToLoadUnregisterSingletonCallbackHandlerThrowsException() {
-
-		$instance = new DeferredCallbackLoader();
-
-		$this->setExpectedException( 'RuntimeException' );
-		$instance->singleton( 'Foo' );
-	}
-
-	public function testRegisterCallbackThrowsException() {
+	public function testTryToUseInvalidNameForCallbackHandlerThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -232,7 +275,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		} );
 	}
 
-	public function testRegisterObjectThrowsException() {
+	public function testTryToUseInvalidNameForObjectRegistrationThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -240,12 +283,12 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		$instance->registerObject( new \stdClass, new \stdClass );
 	}
 
-	public function testRegisterAliasException() {
+	public function testTryToUseInvalidNameForTypeRegistrationThrowsException() {
 
 		$instance = new DeferredCallbackLoader();
 
 		$this->setExpectedException( 'InvalidArgumentException' );
-		$instance->registerAlias( new \stdClass, 'Bar' );
+		$instance->registerExpectedReturnType( new \stdClass, 'Bar' );
 	}
 
 }

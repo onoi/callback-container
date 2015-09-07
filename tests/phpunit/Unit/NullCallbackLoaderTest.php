@@ -36,7 +36,7 @@ class NullCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->assertNull(
-			$instance->registerAlias( 'Foo', 'bar' )
+			$instance->registerExpectedReturnType( 'Foo', 'bar' )
 		);
 
 		$this->assertNull(

@@ -27,7 +27,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 	/**
 	 * @var array
 	 */
-	private $aliases = array();
+	private $expectedReturnTypeByHandler = array();
 
 	/**
 	 * @var array
@@ -37,7 +37,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 	/**
 	 * @since 1.0
 	 *
-	 * @param CallbackContainer $callbackContainer
+	 * @param CallbackContainer|null $callbackContainer
 	 */
 	public function __construct( CallbackContainer $callbackContainer = null ) {
 		if ( $callbackContainer !== null ) {
@@ -59,36 +59,32 @@ class DeferredCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerCallback( $name, Closure $callback ) {
+	public function registerCallback( $handlerName, Closure $callback ) {
 
-		if ( !is_string( $name ) ) {
+		if ( !is_string( $handlerName ) ) {
 			throw new InvalidArgumentException( "Expected a string" );
 		}
 
-		$this->registry[$name] = $callback;
+		$this->registry[$handlerName] = $callback;
 	}
 
 	/**
-	 * If your not running PHPUnit or for that matter any other testing
+	 * If you are not running PHPUnit or for that matter any other testing
 	 * environment then you are not suppose to use this function.
 	 *
 	 * @since  1.0
 	 *
-	 * @param string $name
+	 * @param string $handlerName
 	 * @param mixed $instance
 	 */
-	public function registerObject( $name, $instance ) {
+	public function registerObject( $handlerName, $instance ) {
 
-		if ( !is_string( $name ) ) {
+		if ( !is_string( $handlerName ) ) {
 			throw new InvalidArgumentException( "Expected a string" );
 		}
 
-		if ( isset( $this->aliases[$name] ) ) {
-			$name = $this->aliases[$name];
-		}
-
-		$this->registry[$name] = $instance;
-		$this->singletons[$name] = $instance;
+		$this->registry[$handlerName] = $instance;
+		$this->singletons[$handlerName] = $instance;
 	}
 
 	/**
@@ -96,45 +92,13 @@ class DeferredCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerAlias( $alias, $handlerName ) {
+	public function registerExpectedReturnType( $handlerName, $type ) {
 
-		if ( !is_string( $alias ) || !is_string( $handlerName ) ) {
+		if ( !is_string( $handlerName ) || !is_string( $type ) ) {
 			throw new InvalidArgumentException( "Expected a string" );
 		}
 
-		$this->aliases[$alias] = $handlerName;
-	}
-
-	/**
-	 * It is expected that the name used to load an instance represents the same
-	 * instance signature except for when an alias is used but then the alias
-	 * is required to point to a concrete class/interface construct.
-	 *
-	 * @since  1.0
-	 *
-	 * {@inheritDoc}
-	 */
-	public function load( $name ) {
-
-		$parameters = func_get_args();
-		array_shift( $parameters );
-
-		$instance = null;
-
-		$this->prepareName( $name );
-
-		if ( isset( $this->registry[$name] ) ) {
-			$instance = is_callable( $this->registry[$name] ) ? call_user_func_array( $this->registry[$name], $parameters ) : $this->registry[$name];
-		}
-
-		$this->recursiveMarker[$name]--;
-
-		// Do a type check
-		if ( is_a( $instance, $name ) ) {
-			return $instance;
-		}
-
-		throw new RuntimeException( "Could not load an instance for $name" );
+		$this->expectedReturnTypeByHandler[$handlerName] = $type;
 	}
 
 	/**
@@ -142,69 +106,87 @@ class DeferredCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function singleton( $name ) {
+	public function load( $handlerName ) {
 
 		$parameters = func_get_args();
 		array_shift( $parameters );
 
 		$instance = null;
 
-		$this->prepareName( $name );
+		$this->addRecursiveMarkerFor( $handlerName );
 
-		if ( isset( $this->singletons[$name] ) ) {
-			$instance = is_callable( $this->singletons[$name] ) ? $this->singletons[$name]( $this ) : $this->singletons[$name];
+		if ( isset( $this->registry[$handlerName] ) ) {
+			$instance = is_callable( $this->registry[$handlerName] ) ? call_user_func_array( $this->registry[$handlerName], $parameters ) : $this->registry[$handlerName];
 		}
 
-		$this->recursiveMarker[$name]--;
+		$this->recursiveMarker[$handlerName]--;
 
-		if ( is_a( $instance, $name ) ) {
+		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
 			return $instance;
 		}
 
-		$instance = $this->load( $name, $parameters );
+		throw new RuntimeException( "Expected " . $this->expectedReturnTypeByHandler[$handlerName] . " type for {$handlerName} could not be match to " . get_class( $instance ) );
+	}
 
-		$this->singletons[$name] = function() use ( $instance ) {
+	/**
+	 * @since  1.0
+	 *
+	 * {@inheritDoc}
+	 */
+	public function singleton( $handlerName ) {
+
+		$parameters = func_get_args();
+		array_shift( $parameters );
+
+		$instance = null;
+
+		$this->addRecursiveMarkerFor( $handlerName );
+
+		if ( isset( $this->singletons[$handlerName] ) ) {
+			$instance = is_callable( $this->singletons[$handlerName] ) ? $this->singletons[$handlerName]( $this ) : $this->singletons[$handlerName];
+		}
+
+		$this->recursiveMarker[$handlerName]--;
+
+		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
+			return $instance;
+		}
+
+		$instance = $this->load( $handlerName, $parameters );
+
+		$this->singletons[$handlerName] = function() use ( $instance ) {
 			static $singleton;
 			return $singleton = $singleton === null ? $instance : $singleton;
 		};
 
-		return $this->singleton( $name, $parameters );
+		return $this->singleton( $handlerName, $parameters );
 	}
 
 	/**
 	 * @since  1.0
 	 *
-	 * @param string $name
+	 * @param string $handlerName
 	 */
-	public function deregister( $name ) {
-
-		if ( isset( $this->aliases[$name] ) ) {
-			$name = $this->aliases[$name];
-		}
-
-		unset( $this->registry[$name] );
-		unset( $this->singletons[$name] );
-		unset( $this->aliases[$name] );
+	public function deregister( $handlerName ) {
+		unset( $this->registry[$handlerName] );
+		unset( $this->singletons[$handlerName] );
+		unset( $this->expectedReturnTypeByHandler[$handlerName] );
 	}
 
-	private function prepareName( &$name ) {
+	private function addRecursiveMarkerFor( $handlerName ) {
 
-		if ( !is_string( $name ) ) {
+		if ( !is_string( $handlerName ) ) {
 			throw new InvalidArgumentException( "Expected a string" );
 		}
 
-		if ( isset( $this->aliases[$name] ) ) {
-			$name = $this->aliases[$name];
+		if ( !isset( $this->recursiveMarker[$handlerName] ) ) {
+			$this->recursiveMarker[$handlerName] = 0;
 		}
 
-		if ( !isset( $this->recursiveMarker[$name] ) ) {
-			$this->recursiveMarker[$name] = 0;
-		}
+		$this->recursiveMarker[$handlerName]++;
 
-		$this->recursiveMarker[$name]++;
-
-		if ( $this->recursiveMarker[$name] > 1 ) {
-			throw new RuntimeException( "Oh boy, your execution chain for $name caused a circular reference." );
+		if ( $this->recursiveMarker[$handlerName] > 1 ) {
+			throw new RuntimeException( "Oh boy, your execution chain for $handlerName caused a circular reference." );
 		}
 	}
 

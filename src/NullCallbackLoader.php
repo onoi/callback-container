@@ -22,7 +22,7 @@ class NullCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerAlias( $alias, $handlerName ) {}
+	public function registerExpectedReturnType( $handlerName, $type ) {}
 
 	/**
 	 * @since 1.0

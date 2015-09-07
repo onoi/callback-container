@@ -1,4 +1,4 @@
-# callback-container
+# Callback container
 
 [![Build Status](https://secure.travis-ci.org/onoi/callback-container.svg?branch=master)](http://travis-ci.org/onoi/callback-container)
 [![Code Coverage](https://scrutinizer-ci.com/g/onoi/callback-container/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/onoi/callback-container/?branch=master)
@@ -7,8 +7,8 @@
 [![Packagist download count](https://poser.pugx.org/onoi/callback-container/d/total.png)](https://packagist.org/packages/onoi/callback-container)
 [![Dependency Status](https://www.versioneye.com/php/onoi:callback-container/badge.png)](https://www.versioneye.com/php/onoi:callback-container)
 
-A simple typed callback loader for lazy initialization of registered callback handlers. This
-was part of the [Semantic MediaWiki][smw] code base and is now being deployed as independent library.
+A simple container loader for lazy initialization of registered callback handlers. Part of the
+code base has been extracted from [Semantic MediaWiki][smw] and is now being deployed as independent library.
 
 ## Requirements
 
@@ -16,7 +16,7 @@ PHP 5.3 / HHVM 3.3 or later
 
 ## Installation
 
-The recommended installation method for this library is by either adding
+The recommended installation method for this library is to add
 the dependency to your [composer.json][composer].
 
 ```json
@@ -38,14 +38,14 @@ class FooCallbackContainer implements CallbackContainer {
 
 	private function addCallbackHandlers( $callbackLoader ) {
 
-		$callbackLoader->registerCallback( '\stdClass', function( array $input ) {
+		$callbackLoader->registerCallback( 'Foo', function( array $input ) {
 			$stdClass = new \stdClass;
 			$stdClass->input = $input;
 
 			return $stdClass;
 		} );
 
-		$callbackLoader->registerAlias( 'Foo', '\stdClass' );
+		$callbackLoader->registerExpectedReturnType( 'Foo', '\stdClass' );
 	}
 }
 ```
@@ -56,6 +56,9 @@ $deferredCallbackLoader->registerCallbackContainer( new FooCallbackContainer() )
 $instance = $deferredCallbackLoader->load( 'Foo' );
 $instance = $deferredCallbackLoader->singleton( 'Foo' );
 ```
+
+If a callback handler is registered with a return type then its returning instance
+will typed checked.
 
 ## Contribution and support
 
@@ -71,7 +74,7 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ### Release notes
 
-- 1.0.0 Initial release (2015-09-?)
+- 1.0.0 Initial release (2015-09-07)
 
 ## License
 

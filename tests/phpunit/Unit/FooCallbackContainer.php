@@ -19,11 +19,11 @@ class FooCallbackContainer implements CallbackContainer {
 
 	private function addCallbackHandlers( $callbackLoader ) {
 
-		$callbackLoader->registerCallback( '\stdClass', function() {
+		$callbackLoader->registerCallback( 'Foo', function() {
 			return new \stdClass;
 		} );
 
-		$callbackLoader->registerAlias( 'Foo', '\stdClass' );
+		$callbackLoader->registerExpectedReturnType( 'Foo', '\stdClass' );
 	}
 
 }

@@ -11,42 +11,39 @@ namespace Onoi\CallbackContainer;
 interface CallbackLoader {
 
 	/**
-	 * Register a callback handler that is expected to return a typed
-	 * instance equal to the name used for the registration.
-	 *
 	 * @since 1.0
 	 *
-	 * @param string $name
+	 * @param string $handlerName
 	 * @param Closure $callback
 	 */
-	public function registerCallback( $name, \Closure $callback );
+	public function registerCallback( $handlerName, \Closure $callback );
 
 	/**
-	 * Register an alias for a registered callback handlerto access
-	 * an instance with a non-typed name.
-	 *
 	 * @since 1.0
 	 *
-	 * @param string $alias
 	 * @param string $handlerName
+	 * @param string $type
 	 */
-	public function registerAlias( $alias, $handlerName );
+	public function registerExpectedReturnType( $handlerName, $type );
 
 	/**
 	 * @since 1.0
 	 *
-	 * @param string $name
+	 * @param string $handlerName
 	 *
 	 * @return mixed
 	 * @throws RuntimeException
 	 */
-	public function load( $name );
+	public function load( $handlerName );
 
 	/**
 	 * @since 1.0
 	 *
-	 * @param string $name
+	 * @param string $handlerName
+	 *
+	 * @return mixed
+	 * @throws RuntimeException
 	 */
-	public function singleton( $name );
+	public function singleton( $handlerName );
 
 }
