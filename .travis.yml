@@ -11,6 +11,8 @@ matrix:
       php: 5.3
     - env: TYPE=UNIT;
       php: hhvm
+    - env: TYPE=UNIT;
+      php: 7
 
 script:
   - bash ./tests/travis/run-tests.sh
