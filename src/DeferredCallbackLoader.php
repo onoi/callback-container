@@ -84,7 +84,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 		}
 
 		$this->registry[$handlerName] = $instance;
-		$this->singletons[$handlerName] = $instance;
+		$this->singletons[$handlerName]['#'] = $instance;
 	}
 
 	/**
@@ -111,21 +111,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 		$parameters = func_get_args();
 		array_shift( $parameters );
 
-		$instance = null;
-
-		$this->addRecursiveMarkerFor( $handlerName );
-
-		if ( isset( $this->registry[$handlerName] ) ) {
-			$instance = is_callable( $this->registry[$handlerName] ) ? call_user_func_array( $this->registry[$handlerName], $parameters ) : $this->registry[$handlerName];
-		}
-
-		$this->recursiveMarker[$handlerName]--;
-
-		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
-			return $instance;
-		}
-
-		throw new RuntimeException( "Expected " . $this->expectedReturnTypeByHandler[$handlerName] . " type for {$handlerName} could not be match to " . get_class( $instance ) );
+		return $this->getReturnValueFromCallbackHandlerFor( $handlerName, $parameters );
 	}
 
 	/**
@@ -138,28 +124,22 @@ class DeferredCallbackLoader implements CallbackLoader {
 		$parameters = func_get_args();
 		array_shift( $parameters );
 
-		$instance = null;
+		$fingerprint = $parameters !== array() ? md5( json_encode( $parameters ) ) : '#';
 
-		$this->addRecursiveMarkerFor( $handlerName );
-
-		if ( isset( $this->singletons[$handlerName] ) ) {
-			$instance = is_callable( $this->singletons[$handlerName] ) ? $this->singletons[$handlerName]( $this ) : $this->singletons[$handlerName];
-		}
-
-		$this->recursiveMarker[$handlerName]--;
+		$instance = $this->getReturnValueFromSingletonFor( $handlerName, $fingerprint );
 
 		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
 			return $instance;
 		}
 
-		$instance = $this->load( $handlerName, $parameters );
+		$instance = $this->getReturnValueFromCallbackHandlerFor( $handlerName, $parameters );
 
-		$this->singletons[$handlerName] = function() use ( $instance ) {
+		$this->singletons[$handlerName][$fingerprint] = function() use ( $instance ) {
 			static $singleton;
 			return $singleton = $singleton === null ? $instance : $singleton;
 		};
 
-		return $this->singleton( $handlerName, $parameters );
+		return $instance;
 	}
 
 	/**
@@ -188,6 +168,40 @@ class DeferredCallbackLoader implements CallbackLoader {
 		if ( $this->recursiveMarker[$handlerName] > 1 ) {
 			throw new RuntimeException( "Oh boy, your execution chain for $handlerName caused a circular reference." );
 		}
+	}
+
+	private function getReturnValueFromCallbackHandlerFor( $handlerName, $parameters ) {
+
+		$instance = null;
+
+		$this->addRecursiveMarkerFor( $handlerName );
+
+		if ( isset( $this->registry[$handlerName] ) ) {
+			$instance = is_callable( $this->registry[$handlerName] ) ? call_user_func_array( $this->registry[$handlerName], $parameters ) : $this->registry[$handlerName];
+		}
+
+		$this->recursiveMarker[$handlerName]--;
+
+		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
+			return $instance;
+		}
+
+		throw new RuntimeException( "Expected " . $this->expectedReturnTypeByHandler[$handlerName] . " type for {$handlerName} could not be match to " . get_class( $instance ) );
+	}
+
+	private function getReturnValueFromSingletonFor( $handlerName, $fingerprint ) {
+
+		$instance = null;
+
+		$this->addRecursiveMarkerFor( $handlerName );
+
+		if ( isset( $this->singletons[$handlerName][$fingerprint] ) ) {
+			$instance = is_callable( $this->singletons[$handlerName][$fingerprint] ) ? call_user_func( $this->singletons[$handlerName][$fingerprint] ) : $this->singletons[$handlerName][$fingerprint];
+		}
+
+		$this->recursiveMarker[$handlerName]--;
+
+		return $instance;
 	}
 
 }

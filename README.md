@@ -54,7 +54,7 @@ $deferredCallbackLoader = new DeferredCallbackLoader();
 
 $deferredCallbackLoader->registerCallbackContainer( new FooCallbackContainer() );
 $instance = $deferredCallbackLoader->load( 'Foo', array( 'a', 'b' ) );
-$instance = $deferredCallbackLoader->singleton( 'Foo', array( 'a', 'b' ) );
+$instance = $deferredCallbackLoader->singleton( 'Foo', array( 'aa', 'bb' ) );
 ```
 
 If a callback handler is registered with a return type then the returning instance
@@ -79,6 +79,8 @@ The library provides unit tests that covers the core-functionality normally run 
 ### Release notes
 
 - 1.0.0 Initial release (2015-09-07)
+ - Added the `CallbackContainer` and `CallbackLoader` interface
+ - Added the `DeferredCallbackLoader` and `NullCallbackLoader` implementation
 
 ## License
 

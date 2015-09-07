@@ -169,23 +169,42 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerCallback( 'Foo', function( $a ) {
+		$instance->registerCallback( 'Foo', function() {
+			return new \stdClass;
+		} );
+
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
+
+		$singleton = $instance->singleton( 'Foo' );
+
+		$this->assertSame(
+			$singleton,
+			$instance->singleton( 'Foo' )
+		);
+	}
+
+	public function testFingerprintedParameterizedSingleton() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function( $a, array $b ) {
 			$stdClass = new \stdClass;
 			$stdClass->a = $a;
+			$stdClass->b = $b;
 
 			return $stdClass;
 		} );
 
 		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 
-		$singleton = $instance->singleton( 'Foo', '123' );
-
-		$this->assertTrue(
-			$singleton === $instance->singleton( 'Foo', 'abc' )
+		$this->assertSame(
+			$instance->singleton( 'Foo', 'abc', array( 'def' ) ),
+			$instance->singleton( 'Foo', 'abc', array( 'def' ) )
 		);
 
-		$this->assertFalse(
-			$singleton === $instance->load( 'Foo', 'abc' )
+		$this->assertNotSame(
+			$instance->singleton( 'Foo', 'abc', array( '123' ) ),
+			$instance->singleton( 'Foo', 'abc', array( 'def' ) )
 		);
 	}
 
