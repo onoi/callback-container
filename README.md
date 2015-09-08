@@ -57,9 +57,8 @@ $instance = $deferredCallbackLoader->load( 'Foo', array( 'a', 'b' ) );
 $instance = $deferredCallbackLoader->singleton( 'Foo', array( 'aa', 'bb' ) );
 ```
 
-If a callback handler is registered with a return type then the returning instance
-will be checked against the expected type and in case of a mismatch a
-`RuntimeException` is thrown.
+If a callback handler is registered with an expected return type then any
+mismatch of a returning instance will throw a `RuntimeException`.
 
 ## Contribution and support
 
@@ -78,7 +77,7 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
-- 1.0.0 Initial release (2015-09-07)
+- 1.0.0 Initial release (2015-09-08)
  - Added the `CallbackContainer` and `CallbackLoader` interface
  - Added the `DeferredCallbackLoader` and `NullCallbackLoader` implementation
 
