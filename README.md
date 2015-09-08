@@ -76,7 +76,7 @@ The library provides unit tests that covers the core-functionality normally run 
 [continues integration platform][travis]. Tests can also be executed manually using the
 `composer phpunit` command from the root directory.
 
-### Release notes
+## Release notes
 
 - 1.0.0 Initial release (2015-09-07)
  - Added the `CallbackContainer` and `CallbackLoader` interface

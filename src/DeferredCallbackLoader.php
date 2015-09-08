@@ -128,7 +128,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 
 		$instance = $this->getReturnValueFromSingletonFor( $handlerName, $fingerprint );
 
-		if ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) {
+		if ( $instance !== null && ( !isset( $this->expectedReturnTypeByHandler[$handlerName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$handlerName] ) ) ) {
 			return $instance;
 		}
 

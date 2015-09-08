@@ -46,8 +46,6 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 			return new \stdClass;
 		} );
 
-		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
-
 		$this->assertEquals(
 			new \stdClass,
 			$instance->load( 'Foo' )
@@ -57,11 +55,29 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 			new \stdClass,
 			$instance->singleton( 'Foo' )
 		);
-
-		$instance->deregister( 'Foo' );
 	}
 
-	public function testLoadTypedReturn() {
+	public function testDeregisterCallback() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function() {
+			return 'abc';
+		} );
+
+		$this->assertEquals(
+			'abc',
+			$instance->load( 'Foo' )
+		);
+
+		$instance->deregister( 'Foo' );
+
+		$this->assertNull(
+			$instance->singleton( 'Foo' )
+		);
+	}
+
+	public function testLoadCallbackHandlerWithExpectedReturnType() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -77,7 +93,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testLoadUntypedHandler() {
+	public function testLoadCallbackHandlerWithoutExpectedReturnType() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -93,7 +109,8 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 	public function testRegisterCallbackContainer() {
 
-		$instance = new DeferredCallbackLoader( new FooCallbackContainer() );
+		$instance = new DeferredCallbackLoader();
+		$instance->registerCallbackContainer( new FooCallbackContainer() );
 
 		$this->assertEquals(
 			new \stdClass,
@@ -146,7 +163,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testLoadParameterizedInstance() {
+	public function testLoadParameterizedCallbackHandler() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -183,7 +200,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testFingerprintedParameterizedSingleton() {
+	public function testFingerprintedParameterizedSingletonCallbackHandler() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -208,7 +225,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testLoadUnregisteredCallbackHandlerToReturnNull() {
+	public function testUnregisteredCallbackHandlerIsToReturnNull() {
 
 		$instance = new DeferredCallbackLoader();
 
@@ -217,7 +234,7 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
-	public function testLoadUnregisteredCallbackHandlerAsSingletonToReturnNull() {
+	public function testUnregisteredCallbackHandlerForSingletonIsToReturnNull() {
 
 		$instance = new DeferredCallbackLoader();
 
