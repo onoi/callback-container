@@ -167,18 +167,57 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 
 		$instance = new DeferredCallbackLoader();
 
-		$instance->registerCallback( 'Foo', function( $a ) {
+		$instance->registerCallback( 'Foo', function( $a, $b, $c ) {
 			$stdClass = new \stdClass;
 			$stdClass->a = $a;
+			$stdClass->b = $b;
+			$stdClass->c = $c;
 
 			return $stdClass;
 		} );
 
 		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
 
+		$object = new \stdClass;
+		$object->extra = 123;
+
 		$this->assertEquals(
 			'abc',
-			$instance->load( 'Foo', 'abc' )->a
+			$instance->load( 'Foo', 'abc', 123, $object )->a
+		);
+
+		$this->assertEquals(
+			$object,
+			$instance->load( 'Foo', 'abc', 123, $object )->c
+		);
+	}
+
+	public function testRecursiveBuildToLoadParameterizedCallbackHandler() {
+
+		$instance = new DeferredCallbackLoader();
+
+		$instance->registerCallback( 'Foo', function( $a, $b = null, $c ) {
+			$stdClass = new \stdClass;
+			$stdClass->a = $a;
+			$stdClass->c = $c;
+
+			return $stdClass;
+		} );
+
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
+
+		$instance->registerCallback( 'Bar', function( $a, $b, $c ) use( $instance ) {
+			return $instance->load( 'Foo', $a, $b, $c );
+		} );
+
+		$instance->registerExpectedReturnType( 'Bar', '\stdClass' );
+
+		$object = new \stdClass;
+		$object->extra = 123;
+
+		$this->assertSame(
+			$object,
+			$instance->load( 'Bar', 'abc', null, $object )->c
 		);
 	}
 
