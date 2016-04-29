@@ -24,6 +24,24 @@ class FooCallbackContainer implements CallbackContainer {
 		} );
 
 		$callbackLoader->registerExpectedReturnType( 'Foo', '\stdClass' );
+
+		$callbackLoader->registerCallback( 'FooWithArgument', function( $argument ) use( $callbackLoader ) {
+			$callbackLoader->registerExpectedReturnType( 'FooWithArgument', '\stdClass' );
+
+			$stdClass = new \stdClass;
+			$stdClass->argument = $argument;
+
+			return $stdClass;
+		} );
+
+		$callbackLoader->registerCallback( 'FooWithNullArgument', function( $argument = null ) use( $callbackLoader ) {
+			$callbackLoader->registerExpectedReturnType( 'FooWithNullArgument', '\stdClass' );
+
+			$stdClass = new \stdClass;
+			$stdClass->argument = $argument;
+
+			return $stdClass;
+		} );
 	}
 
 }
