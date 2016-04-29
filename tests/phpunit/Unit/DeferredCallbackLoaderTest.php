@@ -163,6 +163,37 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testOverrideSingletonInstanceOnRegisteredCallbackHandlerWithArguments() {
+
+		$argument = $this->getMockBuilder( '\stdClass' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$instance = new DeferredCallbackLoader(
+			new FooCallbackContainer()
+		);
+
+		$instance->singleton( 'FooWithNullArgument', $argument );
+		$override = $instance->singleton( 'FooWithNullArgument', null );
+
+		$this->assertNotSame(
+			$override,
+			$instance->singleton( 'FooWithNullArgument', $argument )
+		);
+
+		$instance->registerObject( 'FooWithNullArgument', $override );
+
+		$this->assertSame(
+			$override,
+			$instance->singleton( 'FooWithNullArgument', $argument )
+		);
+
+		$this->assertSame(
+			$override,
+			$instance->singleton( 'FooWithNullArgument', null )
+		);
+	}
+
 	public function testLoadParameterizedCallbackHandler() {
 
 		$instance = new DeferredCallbackLoader();

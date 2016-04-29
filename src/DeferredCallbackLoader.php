@@ -83,6 +83,8 @@ class DeferredCallbackLoader implements CallbackLoader {
 			throw new InvalidArgumentException( "Expected a string" );
 		}
 
+		unset( $this->singletons[$handlerName] );
+
 		$this->registry[$handlerName] = $instance;
 		$this->singletons[$handlerName]['#'] = $instance;
 	}
