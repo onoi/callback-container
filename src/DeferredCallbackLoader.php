@@ -108,6 +108,20 @@ class DeferredCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
+	public function create( $handlerName ) {
+
+		$parameters = func_get_args();
+		array_shift( $parameters );
+
+		return $this->getReturnValueFromCallbackHandlerFor( $handlerName, $parameters );
+	}
+
+	/**
+	 * @since  1.0
+	 * @deprecated since 1.1
+	 *
+	 * {@inheritDoc}
+	 */
 	public function load( $handlerName ) {
 
 		$parameters = func_get_args();

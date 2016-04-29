@@ -5,11 +5,10 @@ namespace Onoi\CallbackContainer;
 /**
  * @license GNU GPL v2+
  * @since 1.0
- * @deprecated since 1.1, use NullCallbackInstantiator
  *
  * @author mwjames
  */
-class NullCallbackLoader implements CallbackLoader {
+class NullCallbackInstantiator implements CallbackInstantiator {
 
 	/**
 	 * @since 1.0
@@ -17,13 +16,6 @@ class NullCallbackLoader implements CallbackLoader {
 	 * {@inheritDoc}
 	 */
 	public function registerCallback( $handlerName, \Closure $callback ) {}
-
-	/**
-	 * @since 1.0
-	 *
-	 * {@inheritDoc}
-	 */
-	public function registerExpectedReturnType( $handlerName, $type ) {}
 
 	/**
 	 * @since 1.1
@@ -37,7 +29,7 @@ class NullCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function load( $handlerName ) {}
+	public function registerExpectedReturnType( $handlerName, $type ) {}
 
 	/**
 	 * @since 1.2
