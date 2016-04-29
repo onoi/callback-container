@@ -7,7 +7,7 @@
 [![Packagist download count](https://poser.pugx.org/onoi/callback-container/d/total.png)](https://packagist.org/packages/onoi/callback-container)
 [![Dependency Status](https://www.versioneye.com/php/onoi:callback-container/badge.png)](https://www.versioneye.com/php/onoi:callback-container)
 
-A simple container loader for lazy initialization of registered callback handlers. Part of the
+A simple object instantiator to lazy load registered callback handlers. Part of the
 code base has been extracted from [Semantic MediaWiki][smw] and is now being deployed as independent library.
 
 ## Requirements
@@ -32,29 +32,36 @@ the dependency to your [composer.json][composer].
 ```php
 class FooCallbackContainer implements CallbackContainer {
 
-	public function register( CallbackLoader $callbackLoader ) {
-		$this->addCallbackHandlers( $callbackLoader);
+	public function register( CallbackInstantiator $callbackInstantiator ) {
+		$this->addCallbackHandlers( $callbackInstantiator);
 	}
 
-	private function addCallbackHandlers( $callbackLoader ) {
+	private function addCallbackHandlers( $callbackInstantiator ) {
 
-		$callbackLoader->registerCallback( 'Foo', function( array $input ) {
+		$callbackInstantiator->registerCallback( 'Foo', function( array $input ) {
 			$stdClass = new \stdClass;
 			$stdClass->input = $input;
 
 			return $stdClass;
 		} );
 
-		$callbackLoader->registerExpectedReturnType( 'Foo', '\stdClass' );
+		$callbackInstantiator->registerExpectedReturnType( 'Foo', '\stdClass' );
 	}
 }
 ```
 ```php
-$deferredCallbackLoader = new DeferredCallbackLoader();
+$callbackInstantiator = new DeferredCallbackLoader();
 
-$deferredCallbackLoader->registerCallbackContainer( new FooCallbackContainer() );
-$instance = $deferredCallbackLoader->load( 'Foo', array( 'a', 'b' ) );
-$instance = $deferredCallbackLoader->singleton( 'Foo', array( 'aa', 'bb' ) );
+$callbackInstantiator->registerCallbackContainer( new FooCallbackContainer() );
+$instance = $callbackInstantiator->create(
+	'Foo',
+	array( 'a', 'b' )
+);
+
+$instance = $callbackInstantiator->singleton(
+	'Foo',
+	array( 'aa', 'bb' )
+);
 ```
 
 If a callback handler is registered with an expected return type then any
@@ -76,6 +83,11 @@ The library provides unit tests that covers the core-functionality normally run 
 `composer phpunit` command from the root directory.
 
 ## Release notes
+
+- 1.1.0 (2016-04-29)
+ - Fixed issue in `registeredObject` for when a singleton override contained a `null` argument
+ - Deprecated `CallbackLoader` interface in favour of `CallbackInstantiator` interface
+ - Deprecated `NullCallbackLoader` interface in favour of `NullCallbackInstantiator` interface
 
 - 1.0.0 Initial release (2015-09-08)
  - Added the `CallbackContainer` and `CallbackLoader` interface
