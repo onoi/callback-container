@@ -22,7 +22,7 @@ the dependency to your [composer.json][composer].
 ```json
 {
 	"require": {
-		"onoi/callback-container": "~1.0"
+		"onoi/callback-container": "~1.1"
 	}
 }
 ```
@@ -84,10 +84,10 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
-- 1.1.0 (2016-04-29)
+- 1.1.0 (2016-04-30)
  - Fixed issue in `registeredObject` for when a singleton override contained a `null` argument
- - Deprecated `CallbackLoader` interface in favour of `CallbackInstantiator` interface
- - Deprecated `NullCallbackLoader` interface in favour of `NullCallbackInstantiator` interface
+ - Deprecated the `CallbackLoader` interface in favour of the `CallbackInstantiator` interface
+ - Deprecated the `NullCallbackLoader` class in favour of the `NullCallbackInstantiator` class
 
 - 1.0.0 Initial release (2015-09-08)
  - Added the `CallbackContainer` and `CallbackLoader` interface
