@@ -55,6 +55,10 @@ class DeferredCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
 			new \stdClass,
 			$instance->singleton( 'Foo' )
 		);
+
+		$this->assertTrue(
+			$instance->isRegistered( 'Foo' )
+		);
 	}
 
 	public function testDeregisterCallback() {

@@ -36,6 +36,13 @@ class NullCallbackInstantiator implements CallbackInstantiator {
 	 *
 	 * {@inheritDoc}
 	 */
+	public function isRegistered( $handlerName ) { return false; }
+
+	/**
+	 * @since 1.1
+	 *
+	 * {@inheritDoc}
+	 */
 	public function create( $handlerName ) {}
 
 	/**

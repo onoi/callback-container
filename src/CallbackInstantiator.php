@@ -34,6 +34,15 @@ interface CallbackInstantiator {
 	public function registerExpectedReturnType( $handlerName, $type );
 
 	/**
+	 * @since 1.2
+	 *
+	 * @param string $handlerName
+	 *
+	 * @return boolean
+	 */
+	public function isRegistered( $handlerName );
+
+	/**
 	 * @since 1.1
 	 *
 	 * @param string $handlerName

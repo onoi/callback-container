@@ -44,6 +44,13 @@ class NullCallbackLoader implements CallbackLoader {
 	 *
 	 * {@inheritDoc}
 	 */
+	public function isRegistered( $handlerName ) { return false; }
+
+	/**
+	 * @since 1.1
+	 *
+	 * {@inheritDoc}
+	 */
 	public function create( $handlerName ) {}
 
 	/**

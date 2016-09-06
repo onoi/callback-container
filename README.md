@@ -84,6 +84,10 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
+- 1.1.0 (2016-09-07)
+ - Added `ServicesManager` as convenience class to manage on-the-fly services independent of
+   an active `DeferredCallbackLoader` instance
+
 - 1.1.0 (2016-04-30)
  - Fixed issue in `registeredObject` for when a singleton override contained a `null` argument
  - Deprecated the `CallbackLoader` interface in favour of the `CallbackInstantiator` interface

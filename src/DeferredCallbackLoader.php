@@ -104,6 +104,15 @@ class DeferredCallbackLoader implements CallbackLoader {
 	}
 
 	/**
+	 * @since 1.2
+	 *
+	 * {@inheritDoc}
+	 */
+	public function isRegistered( $handlerName ) {
+		return isset( $this->registry[$handlerName] );
+	}
+
+	/**
 	 * @since  1.0
 	 *
 	 * {@inheritDoc}
@@ -202,7 +211,7 @@ class DeferredCallbackLoader implements CallbackLoader {
 			return $instance;
 		}
 
-		throw new RuntimeException( "Expected " . $this->expectedReturnTypeByHandler[$handlerName] . " type for {$handlerName} could not be match to " . get_class( $instance ) );
+		throw new RuntimeException( "Expected " . $this->expectedReturnTypeByHandler[$handlerName] . " type for {$handlerName} could not be match to " . ( is_object( $instance ) ? get_class( $instance ) : $instance ) );
 	}
 
 	private function getReturnValueFromSingletonFor( $handlerName, $fingerprint ) {

@@ -35,6 +35,10 @@ class NullCallbackInstantiatorTest extends \PHPUnit_Framework_TestCase {
 			$instance->singleton( 'Foo' )
 		);
 
+		$this->assertFalse(
+			$instance->isRegistered( 'Foo' )
+		);
+
 		$this->assertNull(
 			$instance->registerExpectedReturnType( 'Foo', 'bar' )
 		);
