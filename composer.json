@@ -1,9 +1,9 @@
 {
 	"name": "onoi/callback-container",
 	"type": "library",
-	"description": "A simple callback container registry library",
+	"description": "A very simple callback container/builder library",
 	"keywords": [
-		"cache"
+		"container"
 	],
 	"homepage": "https://github.com/onoi/callback-container",
 	"license": "GPL-2.0+",

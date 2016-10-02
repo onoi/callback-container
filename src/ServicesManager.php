@@ -2,10 +2,10 @@
 
 namespace Onoi\CallbackContainer;
 
-use RuntimeException;
+use Onoi\CallbackContainer\Exception\ServiceNotFoundException;
 
 /**
- * Convenience class to handle services isolated from an active CallbackInstantiator
+ * Convenience class to handle services isolated from an active ContainerBuilder
  * instance.
  *
  * @license GNU GPL v2+
@@ -16,26 +16,17 @@ use RuntimeException;
 class ServicesManager {
 
 	/**
-	 * @var CallbackInstantiator
+	 * @var ContainerBuilder
 	 */
-	private $callbackInstantiator;
+	private $containerBuilder;
 
 	/**
 	 * @since 1.2
 	 *
-	 * @param CallbackInstantiator $callbackInstantiator
+	 * @param ContainerBuilder $containerBuilder
 	 */
-	public function __construct( CallbackInstantiator $callbackInstantiator ) {
-		$this->callbackInstantiator = $callbackInstantiator;
-	}
-
-	/**
-	 * @since 1.2
-	 *
-	 * @return ServicesManager
-	 */
-	public static function newManager() {
-		return new self( new DeferredCallbackLoader() );
+	public function __construct( ContainerBuilder $containerBuilder ) {
+		$this->containerBuilder = $containerBuilder;
 	}
 
 	/**
@@ -53,10 +44,10 @@ class ServicesManager {
 			};
 		}
 
-		$this->callbackInstantiator->registerCallback( $serviceName, $service );
+		$this->containerBuilder->registerCallback( $serviceName, $service );
 
 		if ( $type !== null ) {
-			$this->callbackInstantiator->registerExpectedReturnType( $serviceName, $type );
+			$this->containerBuilder->registerExpectedReturnType( $serviceName, $type );
 		}
 	}
 
@@ -68,7 +59,7 @@ class ServicesManager {
 	 * @return boolean
 	 */
 	public function has( $serviceName ) {
-		return $this->callbackInstantiator->isRegistered( $serviceName );
+		return $this->containerBuilder->isRegistered( $serviceName );
 	}
 
 	/**
@@ -77,14 +68,15 @@ class ServicesManager {
 	 * @param string $serviceName
 	 *
 	 * @return mixed
+	 * @throws ServiceNotFoundException
 	 */
 	public function getBy( $serviceName ) {
 
-		if ( !$this->callbackInstantiator->isRegistered( $serviceName ) ) {
-			throw new RuntimeException( "$serviceName is an unknown service." );
+		if ( !$this->containerBuilder->isRegistered( $serviceName ) ) {
+			throw new ServiceNotFoundException( "$serviceName is an unknown service." );
 		}
 
-		return $this->callbackInstantiator->singleton( $serviceName );
+		return $this->containerBuilder->singleton( $serviceName );
 	}
 
 	/**
@@ -93,7 +85,7 @@ class ServicesManager {
 	 * @param string $serviceName
 	 */
 	public function removeBy( $serviceName ) {
-		$this->callbackInstantiator->deregister( $serviceName );
+		$this->containerBuilder->deregister( $serviceName );
 	}
 
 	/**
@@ -103,7 +95,7 @@ class ServicesManager {
 	 * @param mixed $service
 	 */
 	public function overrideWith( $serviceName, $service ) {
-		$this->callbackInstantiator->registerObject( $serviceName, $service );
+		$this->containerBuilder->registerObject( $serviceName, $service );
 	}
 
 }
