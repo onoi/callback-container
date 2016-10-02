@@ -32,38 +32,76 @@ the dependency to your [composer.json][composer].
 ```php
 class FooCallbackContainer implements CallbackContainer {
 
-	public function register( CallbackInstantiator $callbackInstantiator ) {
-		$this->addCallbackHandlers( $callbackInstantiator);
+	public function register( ContainerBuilder $containerBuilder ) {
+		$this->addCallbackHandlers( $containerBuilder);
 	}
 
-	private function addCallbackHandlers( $callbackInstantiator ) {
+	private function addCallbackHandlers( $containerBuilder ) {
 
-		$callbackInstantiator->registerCallback( 'Foo', function( array $input ) {
+		$containerBuilder->registerCallback( 'Foo', function( ContainerBuilder $containerBuilder, array $input ) {
+			$containerBuilder->registerExpectedReturnType( 'Foo', '\stdClass' );
+
 			$stdClass = new \stdClass;
 			$stdClass->input = $input;
 
 			return $stdClass;
 		} );
-
-		$callbackInstantiator->registerExpectedReturnType( 'Foo', '\stdClass' );
 	}
 }
 ```
 ```php
-$callbackInstantiator = new DeferredCallbackLoader();
+use Onoi\CallbackContainer\CallbackContainerFactory;
 
-$callbackInstantiator->registerCallbackContainer( new FooCallbackContainer() );
-$instance = $callbackInstantiator->create(
+$callbackContainerFactory = new CallbackContainerFactory();
+$containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
+
+$containerBuilder->registerCallbackContainer( new FooCallbackContainer() );
+
+$instance = $containerBuilder->create(
 	'Foo',
 	array( 'a', 'b' )
 );
 
-$instance = $callbackInstantiator->singleton(
+$instance = $containerBuilder->singleton(
 	'Foo',
 	array( 'aa', 'bb' )
 );
 ```
+```php
+return array(
 
+	/**
+	 * @return Closure
+	 */
+	'SomeServiceFromFile' => function( $containerBuilder ) {
+		return new \stdClass;
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'AnotherServiceFromFile' => function( $containerBuilder, $argument1, $argument2 ) {
+		$containerBuilder->registerExpectedReturnType( 'AnotherServiceFromFile', '\stdClass' )
+
+		$service = $containerBuilder->create( 'SomeServiceFromFile' );
+		$service->argument1 = $argument1;
+		$service->argument2 = $argument2;
+
+		return $service;
+	}
+);
+```
+```php
+use Onoi\CallbackContainer\CallbackContainerFactory;
+
+$callbackContainerFactory = new CallbackContainerFactory();
+$containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
+
+$containerBuilder->registerFromFile( __DIR__ . '/Foo.php' );
+$someServiceFromFile = $containerBuilder->create( 'SomeServiceFromFile' );
+$anotherServiceFromFile = $containerBuilder->create( 'AnotherServiceFromFile', 'Foo', 'Bar' );
+
+```
 If a callback handler is registered with an expected return type then any
 mismatch of a returning instance will throw a `RuntimeException`.
 

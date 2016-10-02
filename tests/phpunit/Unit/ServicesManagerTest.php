@@ -3,6 +3,7 @@
 namespace Onoi\CallbackContainer\Tests;
 
 use Onoi\CallbackContainer\ServicesManager;
+use Onoi\CallbackContainer\CallbackContainerFactory;
 
 /**
  * @covers \Onoi\CallbackContainer\ServicesManager
@@ -15,26 +16,30 @@ use Onoi\CallbackContainer\ServicesManager;
  */
 class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
+	private $servicesManager;
+
+	protected function setUp() {
+		parent::setUp();
+
+		$callbackContainerFactory = new CallbackContainerFactory();
+		$this->servicesManager = $callbackContainerFactory->newServicesManager();
+	}
+
 	public function testCanConstruct() {
 
-		$callbackInstantiator = $this->getMockBuilder( '\Onoi\CallbackContainer\CallbackInstantiator' )
+		$containerBuilder = $this->getMockBuilder( '\Onoi\CallbackContainer\ContainerBuilder' )
 			->disableOriginalConstructor()
 			->getMock();
 
 		$this->assertInstanceOf(
 			'\Onoi\CallbackContainer\ServicesManager',
-			new ServicesManager( $callbackInstantiator )
-		);
-
-		$this->assertInstanceOf(
-			'\Onoi\CallbackContainer\ServicesManager',
-			ServicesManager::newManager()
+			new ServicesManager( $containerBuilder )
 		);
 	}
 
 	public function testAddServiceWithScalarType() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 		$instance->add( 'Foo', 123 );
 
 		$this->assertTrue(
@@ -49,7 +54,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 	public function testAddServiceWithObjectType() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 		$instance->add( 'Foo', $this );
 
 		$this->assertTrue(
@@ -64,7 +69,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 	public function testRemoveService() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 		$instance->add( 'Foo', $this );
 
 		$this->assertTrue(
@@ -80,7 +85,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 	public function testOverrideUntypedService() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 		$instance->add( 'Foo', $this );
 
 		$this->assertTrue(
@@ -97,7 +102,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 	public function testTryToOverrideTypedServiceWithIncompatibleTypeThrowsException() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 		$instance->add( 'Foo', $this, '\PHPUnit_Framework_TestCase' );
 
 		$this->assertTrue(
@@ -106,15 +111,15 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$instance->overrideWith( 'Foo', 123 );
 
-		$this->setExpectedException( 'RuntimeException' );
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceTypeMismatchException' );
 		$instance->getBy( 'Foo' );
 	}
 
 	public function testTryToAccessToUnknownServiceThrowsException() {
 
-		$instance = ServicesManager::newManager();
+		$instance = $this->servicesManager;
 
-		$this->setExpectedException( 'RuntimeException' );
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceNotFoundException' );
 		$instance->getBy( 'Foo' );
 	}
 
