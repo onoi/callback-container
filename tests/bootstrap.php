@@ -24,3 +24,4 @@ if ( is_readable( $path = __DIR__ . '/../vendor/autoload.php' ) ) {
 
 $autoLoader = require $path;
 $autoLoader->addPsr4( 'Onoi\\CallbackContainer\\Tests\\', __DIR__ . '/phpunit/Unit' );
+$autoLoader->addPsr4( 'Onoi\\CallbackContainer\\Fixtures\\', __DIR__ . '/phpunit/Fixtures' );

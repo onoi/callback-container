@@ -8,7 +8,8 @@
 [![Dependency Status](https://www.versioneye.com/php/onoi:callback-container/badge.png)](https://www.versioneye.com/php/onoi:callback-container)
 
 A simple object instantiator to lazy load registered callback handlers. Part of the
-code base has been extracted from [Semantic MediaWiki][smw] and is now being deployed as independent library.
+code base has been extracted from [Semantic MediaWiki][smw] and is now being
+deployed as independent library.
 
 ## Requirements
 
@@ -22,50 +23,118 @@ the dependency to your [composer.json][composer].
 ```json
 {
 	"require": {
-		"onoi/callback-container": "~1.1"
+		"onoi/callback-container": "~2.0"
 	}
 }
 ```
 
 ## Usage
 
+### CallbackContainerBuilder and CallbackContainer
+
 ```php
 class FooCallbackContainer implements CallbackContainer {
 
-	public function register( CallbackInstantiator $callbackInstantiator ) {
-		$this->addCallbackHandlers( $callbackInstantiator);
+	public function register( ContainerBuilder $containerBuilder ) {
+		$this->addCallbackHandlers( $containerBuilder);
 	}
 
-	private function addCallbackHandlers( $callbackInstantiator ) {
+	private function addCallbackHandlers( $containerBuilder ) {
 
-		$callbackInstantiator->registerCallback( 'Foo', function( array $input ) {
+		$containerBuilder->registerCallback( 'Foo', function( ContainerBuilder $containerBuilder, array $input ) {
+			$containerBuilder->registerExpectedReturnType( 'Foo', '\stdClass' );
+
 			$stdClass = new \stdClass;
 			$stdClass->input = $input;
 
 			return $stdClass;
 		} );
-
-		$callbackInstantiator->registerExpectedReturnType( 'Foo', '\stdClass' );
 	}
 }
 ```
 ```php
-$callbackInstantiator = new DeferredCallbackLoader();
+use Onoi\CallbackContainer\CallbackContainerFactory;
 
-$callbackInstantiator->registerCallbackContainer( new FooCallbackContainer() );
-$instance = $callbackInstantiator->create(
+$callbackContainerFactory = new CallbackContainerFactory();
+$containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
+
+$containerBuilder->registerCallbackContainer( new FooCallbackContainer() );
+
+$instance = $containerBuilder->create(
 	'Foo',
 	array( 'a', 'b' )
 );
 
-$instance = $callbackInstantiator->singleton(
+$instance = $containerBuilder->singleton(
 	'Foo',
 	array( 'aa', 'bb' )
 );
 ```
+```php
+return array(
 
+	/**
+	 * @return Closure
+	 */
+	'SomeServiceFromFile' => function( $containerBuilder ) {
+		return new \stdClass;
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'AnotherServiceFromFile' => function( $containerBuilder, $argument1, $argument2 ) {
+		$containerBuilder->registerExpectedReturnType( 'AnotherServiceFromFile', '\stdClass' )
+
+		$service = $containerBuilder->create( 'SomeServiceFromFile' );
+		$service->argument1 = $argument1;
+		$service->argument2 = $argument2;
+
+		return $service;
+	}
+);
+```
+```php
+use Onoi\CallbackContainer\CallbackContainerFactory;
+
+$callbackContainerFactory = new CallbackContainerFactory();
+$containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
+
+$containerBuilder->registerFromFile( __DIR__ . '/Foo.php' );
+$someServiceFromFile = $containerBuilder->create( 'SomeServiceFromFile' );
+$anotherServiceFromFile = $containerBuilder->create( 'AnotherServiceFromFile', 'Foo', 'Bar' );
+
+```
 If a callback handler is registered with an expected return type then any
 mismatch of a returning instance will throw a `RuntimeException`.
+
+### LoggableContainerBuilder
+
+`LoggableContainerBuilder` is provided as facade to enable logging and sniffing of
+registered callback instances.
+
+```php
+use Onoi\CallbackContainer\CallbackContainerFactory;
+
+$callbackContainerFactory = new CallbackContainerFactory();
+
+$containerBuilder = $callbackContainerFactory->newLoggableContainerBuilder(
+	$callbackContainerFactory->newCallbackContainerBuilder(),
+	$callbackContainerFactory->newBacktraceSniffer( 10 ),
+	$callbackContainerFactory->newCallFuncMemorySniffer()
+);
+
+$containerBuilder->registerCallbackContainer(
+	new FooCallbackContainer()
+);
+
+$containerBuilder->setLogger(
+	$containerBuilder->singleton( 'SomeLogger' )
+);
+
+```
+
+If a `Psr\Log\LoggerInterface` is set then a similar [output](docs/example.loggable.output.md) will be produced.
 
 ## Contribution and support
 
@@ -84,6 +153,12 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
+- 2.0.0 (2016-11-26)
+ - Added `CallbackContainerFactory`
+ - Added `LoggableContainerBuilder`
+ - Added `CallbackContainerBuilder::registerFromFile` to allow loading callback
+   definitions from a file
+
 - 1.1.0 (2016-09-07)
  - Added `ServicesManager` as convenience class to manage on-the-fly services independent of
    an active `DeferredCallbackLoader` instance
@@ -93,7 +168,7 @@ The library provides unit tests that covers the core-functionality normally run 
  - Deprecated the `CallbackLoader` interface in favour of the `CallbackInstantiator` interface
  - Deprecated the `NullCallbackLoader` class in favour of the `NullCallbackInstantiator` class
 
-- 1.0.0 Initial release (2015-09-08)
+- 1.0.0 (2015-09-08)
  - Added the `CallbackContainer` and `CallbackLoader` interface
  - Added the `DeferredCallbackLoader` and `NullCallbackLoader` implementation
 

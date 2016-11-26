@@ -3,7 +3,7 @@
 namespace Onoi\CallbackContainer;
 
 /**
- * Interface describing a container to be registered with a CallbackLoader.
+ * Interface describing a container to be registered with a ContainerBuilder.
  *
  * @license GNU GPL v2+
  * @since 1.0
@@ -15,8 +15,8 @@ interface CallbackContainer {
 	/**
 	 * @since 1.0
 	 *
-	 * @param CallbackLoader $callbackLoader
+	 * @param ContainerLoader $containerLoader
 	 */
-	public function register( CallbackLoader $callbackLoader );
+	public function register( ContainerBuilder $containerBuilder );
 
 }
