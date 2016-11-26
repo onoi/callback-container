@@ -10,7 +10,7 @@ use Onoi\CallbackContainer\Fixtures\FakeCallbackContainer;
  * @group onoi-callback-container
  *
  * @license GNU GPL v2+
- * @since 1.0
+ * @since 1.2
  *
  * @author mwjames
  */
@@ -133,6 +133,37 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 			new \stdClass,
 			$instance->create( 'SomeStdClassFromFile' )
 		);
+	}
+
+	public function testRegisterFromFileWithInterFactory() {
+
+		$instance = new CallbackContainerBuilder();
+		$instance->registerFromFile( __DIR__ . '/../Fixtures/fakeCallbackFromFile.php' );
+
+		$this->assertEquals(
+			new \stdClass,
+			$instance->create( 'AnotherStdClassFromFileWithInterFactory' )
+		);
+	}
+
+	public function testRegisterFromFileWithInterFactoryAndArgument() {
+
+		$instance = new CallbackContainerBuilder();
+		$instance->registerFromFile( __DIR__ . '/../Fixtures/fakeCallbackFromFile.php' );
+
+		$this->assertEquals(
+			123,
+			$instance->create( 'AnotherStdClassFromFileWithInterFactoryAndArgument', 123 )->argument
+		);
+	}
+
+	public function testRegisterFromFileWithCircularReferenceThrowsException() {
+
+		$instance = new CallbackContainerBuilder();
+		$instance->registerFromFile( __DIR__ . '/../Fixtures/fakeCallbackFromFile.php' );
+
+		$this->setExpectedException( 'Onoi\CallbackContainer\Exception\ServiceCircularReferenceException' );
+		$instance->create( 'serviceFromFileWithForcedCircularReference' );
 	}
 
 	public function testRegisterObject() {
@@ -325,7 +356,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->singleton( 'Foo' );
 	}
 
-	public function testTryToLoadCallbackHandlerWithTypeMismatchThrowsException() {
+	public function testCreateFromCallbackWithTypeMismatchThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -339,7 +370,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->create( 'Foo' );
 	}
 
-	public function testTryToUseInvalidNameForCallbackHandlerOnLoadThrowsException() {
+	public function testCreateWithInvalidNameForCallbackHandlerOnLoadThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -347,7 +378,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->create( new \stdClass );
 	}
 
-	public function testTryToUseInvalidNameForCallbackHandlerOnSingletonThrowsException() {
+	public function testSingletonWithInvalidNameForCallbackHandlerOnSingletonThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -355,7 +386,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->singleton( new \stdClass );
 	}
 
-	public function testTryToLoadCallbackHandlerWithCircularReferenceThrowsException() {
+	public function testCreateOnCallbackHandlerWithCircularReferenceThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -369,7 +400,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->create( 'Foo' );
 	}
 
-	public function testTryToLoadSingletonCallbackHandlerWithCircularReferenceThrowsException() {
+	public function testSingletonOnCallbackHandlerWithCircularReferenceThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -382,7 +413,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->singleton( 'Foo' );
 	}
 
-	public function testTryToUseInvalidNameOnCallbackHandlerRegistrationThrowsException() {
+	public function testRegisterCallbackWithInvalidNameThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -392,7 +423,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		} );
 	}
 
-	public function testTryToUseInvalidNameOnObjectRegistrationThrowsException() {
+	public function testRegisterObjectWithInvalidNameThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -400,7 +431,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->registerObject( new \stdClass, new \stdClass );
 	}
 
-	public function testTryToUseInvalidNameOnTypeRegistrationThrowsException() {
+	public function testRegisterExpectedReturnTypeWithInvalidTypeThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 
@@ -408,7 +439,7 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		$instance->registerExpectedReturnType( new \stdClass, 'Bar' );
 	}
 
-	public function testTryToRegisterFromInvalidFileThrowsException() {
+	public function testRegisterFromWithInvalidFileThrowsException() {
 
 		$instance = new CallbackContainerBuilder();
 

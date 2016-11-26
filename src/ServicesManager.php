@@ -34,9 +34,9 @@ class ServicesManager {
 	 *
 	 * @param string $serviceName
 	 * @param mixed $service
-	 * @param string|null $type
+	 * @param string|null $expectedReturnType
 	 */
-	public function add( $serviceName, $service, $type = null ) {
+	public function add( $serviceName, $service, $expectedReturnType = null ) {
 
 		if ( !is_callable( $service ) ) {
 			$service = function() use( $service ) {
@@ -46,8 +46,8 @@ class ServicesManager {
 
 		$this->containerBuilder->registerCallback( $serviceName, $service );
 
-		if ( $type !== null ) {
-			$this->containerBuilder->registerExpectedReturnType( $serviceName, $type );
+		if ( $expectedReturnType !== null ) {
+			$this->containerBuilder->registerExpectedReturnType( $serviceName, $expectedReturnType );
 		}
 	}
 
@@ -70,13 +70,16 @@ class ServicesManager {
 	 * @return mixed
 	 * @throws ServiceNotFoundException
 	 */
-	public function getBy( $serviceName ) {
+	public function get( $serviceName ) {
 
 		if ( !$this->containerBuilder->isRegistered( $serviceName ) ) {
 			throw new ServiceNotFoundException( "$serviceName is an unknown service." );
 		}
 
-		return $this->containerBuilder->singleton( $serviceName );
+		$parameters = func_get_args();
+		array_unshift( $parameters, $serviceName );
+
+		return call_user_func_array( array( $this->containerBuilder, 'create' ), $parameters );
 	}
 
 	/**
@@ -84,7 +87,7 @@ class ServicesManager {
 	 *
 	 * @param string $serviceName
 	 */
-	public function removeBy( $serviceName ) {
+	public function remove( $serviceName ) {
 		$this->containerBuilder->deregister( $serviceName );
 	}
 

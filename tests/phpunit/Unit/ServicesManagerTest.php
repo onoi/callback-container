@@ -48,7 +48,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame(
 			123,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -63,7 +63,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame(
 			$this,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -76,7 +76,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 			$instance->has( 'Foo' )
 		);
 
-		$instance->removeBy( 'Foo' );
+		$instance->remove( 'Foo' );
 
 		$this->assertFalse(
 			$instance->has( 'Foo' )
@@ -96,7 +96,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame(
 			123,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -112,7 +112,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 		$instance->overrideWith( 'Foo', 123 );
 
 		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceTypeMismatchException' );
-		$instance->getBy( 'Foo' );
+		$instance->get( 'Foo' );
 	}
 
 	public function testTryToAccessToUnknownServiceThrowsException() {
@@ -120,7 +120,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 		$instance = $this->servicesManager;
 
 		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceNotFoundException' );
-		$instance->getBy( 'Foo' );
+		$instance->get( 'Foo' );
 	}
 
 }

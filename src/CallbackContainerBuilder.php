@@ -11,7 +11,7 @@ use Onoi\CallbackContainer\Exception\ServiceNotFoundException;
 
 /**
  * @license GNU GPL v2+
- * @since 1.0
+ * @since 2.0
  *
  * @author mwjames
  */
@@ -38,7 +38,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	protected $recursiveMarker = array();
 
 	/**
-	 * @since 1.0
+	 * @since 2.0
 	 *
 	 * @param CallbackContainer|null $callbackContainer
 	 */
@@ -49,7 +49,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @since 1.0
+	 * @since 2.0
 	 *
 	 * @param CallbackContainer $callbackContainer
 	 */
@@ -58,7 +58,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @since 1.2
+	 * @since 2.0
 	 *
 	 * @param string $file
 	 * @throws FileNotFoundException
@@ -69,7 +69,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 			throw new FileNotFoundException( "Cannot access or read {$file}" );
 		}
 
-		$defintions = require_once $file;
+		$defintions = require $file;
 
 		foreach ( $defintions as $serviceName => $callback ) {
 
@@ -82,7 +82,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @since 1.0
+	 * @since 2.0
 	 *
 	 * {@inheritDoc}
 	 */
@@ -99,7 +99,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 * If you are not running PHPUnit or for that matter any other testing
 	 * environment then you are not suppose to use this function.
 	 *
-	 * @since  1.0
+	 * @since 2.0
 	 *
 	 * @param string $serviceName
 	 * @param mixed $instance
@@ -117,7 +117,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @since 1.0
+	 * @since 2.0
 	 *
 	 * {@inheritDoc}
 	 */
@@ -131,36 +131,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @see PSR-11 ContainerInterface
-	 * @since 1.2
-	 *
-	 * {@inheritDoc}
-	 */
-	public function has( $id ) {
-		return $this->isRegistered( $id );
-	}
-
-	/**
-	 * @see PSR-11 ContainerInterface
-	 * @since 1.2
-	 *
-	 * {@inheritDoc}
-	 */
-	public function get( $id ) {
-
-		// A call to the get method with a non-existing id SHOULD throw a Psr\Container\Exception\NotFoundExceptionInterface.
-		if ( !$this->has( $id ) ) {
-		//	throw new NotFoundExceptionInterface( "Unknown {$id} handler or service" );
-		}
-
-		$parameters = func_get_args();
-		array_shift( $parameters );
-
-		return $this->getReturnValueFromCallbackHandlerFor( $id, $parameters );
-	}
-
-	/**
-	 * @since 1.2
+	 * @since 2.0
 	 *
 	 * {@inheritDoc}
 	 */
@@ -169,48 +140,25 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	}
 
 	/**
-	 * @since  1.0
+	 * @since 2.0
 	 *
 	 * {@inheritDoc}
 	 */
 	public function create( $serviceName ) {
-
-		$parameters = func_get_args();
-		array_shift( $parameters );
-
-		return $this->getReturnValueFromCallbackHandlerFor( $serviceName, $parameters );
+		return $this->getReturnValueFromCallbackHandlerFor( $serviceName, func_get_args() );
 	}
 
 	/**
-	 * @since  1.0
+	 * @since 2.0
 	 *
 	 * {@inheritDoc}
 	 */
 	public function singleton( $serviceName ) {
-
-		$parameters = func_get_args();
-		array_shift( $parameters );
-
-		$fingerprint = $parameters !== array() ? md5( json_encode( $parameters ) ) : '#';
-
-		$instance = $this->getReturnValueFromSingletonFor( $serviceName, $fingerprint );
-
-		if ( $instance !== null && ( !isset( $this->expectedReturnTypeByHandler[$serviceName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$serviceName] ) ) ) {
-			return $instance;
-		}
-
-		$instance = $this->getReturnValueFromCallbackHandlerFor( $serviceName, $parameters );
-
-		$this->singletons[$serviceName][$fingerprint] = function() use ( $instance ) {
-			static $singleton;
-			return $singleton = $singleton === null ? $instance : $singleton;
-		};
-
-		return $instance;
+		return $this->getReturnValueFromSingletonFor( $serviceName, func_get_args() );
 	}
 
 	/**
-	 * @since  1.0
+	 * @since 2.0
 	 *
 	 * @param string $serviceName
 	 */
@@ -220,7 +168,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		unset( $this->expectedReturnTypeByHandler[$serviceName] );
 	}
 
-	protected function addRecursiveMarkerFor( $serviceName ) {
+	private function addRecursiveMarkerFor( $serviceName ) {
 
 		if ( !is_string( $serviceName ) ) {
 			throw new InvalidParameterTypeException( "Expected a string" );
@@ -237,7 +185,7 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		}
 	}
 
-	protected function getReturnValueFromCallbackHandlerFor( $serviceName, $parameters ) {
+	private function getReturnValueFromCallbackHandlerFor( $serviceName, $parameters ) {
 
 		$instance = null;
 		$this->addRecursiveMarkerFor( $serviceName );
@@ -245,6 +193,9 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		if ( !isset( $this->registry[$serviceName] ) ) {
 			throw new ServiceNotFoundException( "$serviceName is an unknown service." );
 		}
+
+		// Remove the ServiceName
+		array_shift( $parameters );
 
 		// Shift the ContainerBuilder to the first position in the parameter list
 		array_unshift( $parameters, $this );
@@ -260,9 +211,11 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		throw new ServiceTypeMismatchException( $serviceName, $this->expectedReturnTypeByHandler[$serviceName], ( is_object( $instance ) ? get_class( $instance ) : $instance ) );
 	}
 
-	private function getReturnValueFromSingletonFor( $serviceName, $fingerprint ) {
+	private function getReturnValueFromSingletonFor( $serviceName, $parameters ) {
 
 		$instance = null;
+		$fingerprint = $parameters !== array() ? md5( json_encode( $parameters ) ) : '#';
+
 		$this->addRecursiveMarkerFor( $serviceName );
 
 		if ( isset( $this->singletons[$serviceName][$fingerprint] ) ) {
@@ -271,6 +224,17 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		}
 
 		$this->recursiveMarker[$serviceName]--;
+
+		if ( $instance !== null && ( !isset( $this->expectedReturnTypeByHandler[$serviceName] ) || is_a( $instance, $this->expectedReturnTypeByHandler[$serviceName] ) ) ) {
+			return $instance;
+		}
+
+		$instance = $this->getReturnValueFromCallbackHandlerFor( $serviceName, $parameters );
+
+		$this->singletons[$serviceName][$fingerprint] = function() use ( $instance ) {
+			static $singleton;
+			return $singleton = $singleton === null ? $instance : $singleton;
+		};
 
 		return $instance;
 	}

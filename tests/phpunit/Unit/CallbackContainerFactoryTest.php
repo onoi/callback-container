@@ -43,6 +43,24 @@ class CallbackContainerFactoryTest extends \PHPUnit_Framework_TestCase {
 		);
 	}
 
+	public function testCanConstructLoggableContainerBuilder() {
+
+		$instance = new CallbackContainerFactory();
+
+		$backtraceSniffer = $this->getMockBuilder( '\Onoi\CallbackContainer\BacktraceSniffer' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$callFuncMemorySniffer = $this->getMockBuilder( '\Onoi\CallbackContainer\CallFuncMemorySniffer' )
+			->disableOriginalConstructor()
+			->getMock();
+
+		$this->assertInstanceOf(
+			'\Onoi\CallbackContainer\LoggableContainerBuilder',
+			$instance->newLoggableContainerBuilder( null, $backtraceSniffer, $callFuncMemorySniffer )
+		);
+	}
+
 	public function testCanConstructServicesManager() {
 
 		$instance = new CallbackContainerFactory();
@@ -59,6 +77,26 @@ class CallbackContainerFactoryTest extends \PHPUnit_Framework_TestCase {
 		$this->assertInstanceOf(
 			'\Onoi\CallbackContainer\ServicesManager',
 			$instance->newServicesManager( $containerBuilder )
+		);
+	}
+
+	public function testCanConstructBacktraceSniffer() {
+
+		$instance = new CallbackContainerFactory();
+
+		$this->assertInstanceOf(
+			'\Onoi\CallbackContainer\BacktraceSniffer',
+			$instance->newBacktraceSniffer()
+		);
+	}
+
+	public function testCanConstructCallFuncMemorySniffer() {
+
+		$instance = new CallbackContainerFactory();
+
+		$this->assertInstanceOf(
+			'\Onoi\CallbackContainer\CallFuncMemorySniffer',
+			$instance->newCallFuncMemorySniffer()
 		);
 	}
 

@@ -3,6 +3,8 @@
 namespace Onoi\CallbackContainer\Tests;
 
 /**
+ * @codeCoverageIgnore
+ *
  * Expected registration form:
  *
  * return array(
@@ -21,6 +23,37 @@ return array(
 	 */
 	'SomeStdClassFromFile' => function( $containerBuilder ) {
 		return new \stdClass;
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'AnotherStdClassFromFileWithInterFactory' => function( $containerBuilder ) {
+		$containerBuilder->registerExpectedReturnType( 'AnotherStdClassFromFile', '\stdClass' );
+		return $containerBuilder->create( 'SomeStdClassFromFile' );
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'AnotherStdClassFromFileWithInterFactoryAndArgument' => function( $containerBuilder, $arg ) {
+		$instance = $containerBuilder->create( 'AnotherStdClassFromFileWithInterFactory' );
+		$instance->argument = $arg;
+		return $instance;
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'serviceCallFromFileWithCircularReference' => function( $containerBuilder ) {
+		return $containerBuilder->create( 'serviceFromFileWithForcedCircularReference' );
+	},
+
+	/**
+	 * @return Closure
+	 */
+	'serviceFromFileWithForcedCircularReference' => function( $containerBuilder ) {
+		return $containerBuilder->create( 'serviceCallFromFileWithCircularReference' );
 	},
 
 	/**
