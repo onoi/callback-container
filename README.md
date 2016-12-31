@@ -8,7 +8,8 @@
 [![Dependency Status](https://www.versioneye.com/php/onoi:callback-container/badge.png)](https://www.versioneye.com/php/onoi:callback-container)
 
 A simple object instantiator to lazy load registered callback handlers. Part of the
-code base has been extracted from [Semantic MediaWiki][smw] and is now being deployed as independent library.
+code base has been extracted from [Semantic MediaWiki][smw] and is now being
+deployed as independent library.
 
 ## Requirements
 
@@ -22,7 +23,7 @@ the dependency to your [composer.json][composer].
 ```json
 {
 	"require": {
-		"onoi/callback-container": "~1.1"
+		"onoi/callback-container": "~2.0"
 	}
 }
 ```
@@ -30,80 +31,16 @@ the dependency to your [composer.json][composer].
 ## Usage
 
 ```php
-class FooCallbackContainer implements CallbackContainer {
-
-	public function register( ContainerBuilder $containerBuilder ) {
-		$this->addCallbackHandlers( $containerBuilder);
-	}
-
-	private function addCallbackHandlers( $containerBuilder ) {
-
-		$containerBuilder->registerCallback( 'Foo', function( ContainerBuilder $containerBuilder, array $input ) {
-			$containerBuilder->registerExpectedReturnType( 'Foo', '\stdClass' );
-
-			$stdClass = new \stdClass;
-			$stdClass->input = $input;
-
-			return $stdClass;
-		} );
-	}
-}
-```
-```php
 use Onoi\CallbackContainer\CallbackContainerFactory;
 
 $callbackContainerFactory = new CallbackContainerFactory();
 $containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
 
-$containerBuilder->registerCallbackContainer( new FooCallbackContainer() );
-
-$instance = $containerBuilder->create(
-	'Foo',
-	array( 'a', 'b' )
-);
-
-$instance = $containerBuilder->singleton(
-	'Foo',
-	array( 'aa', 'bb' )
-);
+...
 ```
-```php
-return array(
 
-	/**
-	 * @return Closure
-	 */
-	'SomeServiceFromFile' => function( $containerBuilder ) {
-		return new \stdClass;
-	},
-
-	/**
-	 * @return Closure
-	 */
-	'AnotherServiceFromFile' => function( $containerBuilder, $argument1, $argument2 ) {
-		$containerBuilder->registerExpectedReturnType( 'AnotherServiceFromFile', '\stdClass' )
-
-		$service = $containerBuilder->create( 'SomeServiceFromFile' );
-		$service->argument1 = $argument1;
-		$service->argument2 = $argument2;
-
-		return $service;
-	}
-);
-```
-```php
-use Onoi\CallbackContainer\CallbackContainerFactory;
-
-$callbackContainerFactory = new CallbackContainerFactory();
-$containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
-
-$containerBuilder->registerFromFile( __DIR__ . '/Foo.php' );
-$someServiceFromFile = $containerBuilder->create( 'SomeServiceFromFile' );
-$anotherServiceFromFile = $containerBuilder->create( 'AnotherServiceFromFile', 'Foo', 'Bar' );
-
-```
-If a callback handler is registered with an expected return type then any
-mismatch of a returning instance will throw a `RuntimeException`.
+[usage.md](/docs/usage.md) contains examples on how the classes and functions
+of this library can be used.
 
 ## Contribution and support
 
@@ -122,16 +59,17 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
-- 1.1.0 (2016-09-07)
- - Added `ServicesManager` as convenience class to manage on-the-fly services independent of
-   an active `DeferredCallbackLoader` instance
+- 2.0.0 (2016-12-31)
+ - Added `CallbackContainerFactory`
+ - Added `CallbackContainerBuilder::registerFromFile` to allow loading callback
+   definitions from a file
 
 - 1.1.0 (2016-04-30)
  - Fixed issue in `registeredObject` for when a singleton override contained a `null` argument
  - Deprecated the `CallbackLoader` interface in favour of the `CallbackInstantiator` interface
  - Deprecated the `NullCallbackLoader` class in favour of the `NullCallbackInstantiator` class
 
-- 1.0.0 Initial release (2015-09-08)
+- 1.0.0 (2015-09-08)
  - Added the `CallbackContainer` and `CallbackLoader` interface
  - Added the `DeferredCallbackLoader` and `NullCallbackLoader` implementation
 

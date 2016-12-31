@@ -6,37 +6,11 @@ use Closure;
 
 /**
  * @license GNU GPL v2+
- * @since 2.0
+ * @since 1.2
  *
  * @author mwjames
  */
-interface ContainerBuilder {
-
-	/**
-	 * @since 1.0
-	 *
-	 * @param string $serviceName
-	 * @param Closure $callback
-	 */
-	public function registerCallback( $serviceName, Closure $callback );
-
-	/**
-	 * @since 1.1
-	 *
-	 * @param CallbackContainer $callbackContainer
-	 */
-	public function registerCallbackContainer( CallbackContainer $callbackContainer );
-
-	/**
-	 * Registers the expected return type of an instance that is called either
-	 * via ContainerBuilder::create or ContainerBuilder::singleton.
-	 *
-	 * @since 1.0
-	 *
-	 * @param string $serviceName
-	 * @param string $type
-	 */
-	public function registerExpectedReturnType( $serviceName, $type );
+interface ContainerBuilder extends ContainerRegistry {
 
 	/**
 	 * @since 1.2

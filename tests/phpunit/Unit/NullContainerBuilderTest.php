@@ -40,7 +40,15 @@ class NullContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->assertNull(
+			$instance->registerObject( 'Foo', 'bar' )
+		);
+
+		$this->assertNull(
 			$instance->registerCallback( 'Foo', function() {} )
+		);
+
+		$this->assertNull(
+			$instance->registerFromFile( 'File' )
 		);
 
 		$callbackContainer = $this->getMockBuilder( '\Onoi\CallbackContainer\CallbackContainer' )

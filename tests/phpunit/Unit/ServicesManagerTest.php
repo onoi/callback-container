@@ -10,7 +10,7 @@ use Onoi\CallbackContainer\CallbackContainerFactory;
  * @group onoi-callback-container
  *
  * @license GNU GPL v2+
- * @since 1.2
+ * @since 2.0
  *
  * @author mwjames
  */
@@ -48,7 +48,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame(
 			123,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -63,7 +63,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame(
 			$this,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -76,7 +76,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 			$instance->has( 'Foo' )
 		);
 
-		$instance->removeBy( 'Foo' );
+		$instance->remove( 'Foo' );
 
 		$this->assertFalse(
 			$instance->has( 'Foo' )
@@ -92,11 +92,11 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 			$instance->has( 'Foo' )
 		);
 
-		$instance->overrideWith( 'Foo', 123 );
+		$instance->replace( 'Foo', 123 );
 
 		$this->assertSame(
 			123,
-			$instance->getBy( 'Foo' )
+			$instance->get( 'Foo' )
 		);
 	}
 
@@ -109,10 +109,10 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 			$instance->has( 'Foo' )
 		);
 
-		$instance->overrideWith( 'Foo', 123 );
+		$instance->replace( 'Foo', 123 );
 
 		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceTypeMismatchException' );
-		$instance->getBy( 'Foo' );
+		$instance->get( 'Foo' );
 	}
 
 	public function testTryToAccessToUnknownServiceThrowsException() {
@@ -120,7 +120,7 @@ class ServicesManagerTest extends \PHPUnit_Framework_TestCase {
 		$instance = $this->servicesManager;
 
 		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceNotFoundException' );
-		$instance->getBy( 'Foo' );
+		$instance->get( 'Foo' );
 	}
 
 }
