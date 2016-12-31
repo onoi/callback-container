@@ -187,7 +187,6 @@ class CallbackContainerBuilder implements ContainerBuilder {
 
 	private function getReturnValueFromCallbackHandlerFor( $serviceName, $parameters ) {
 
-		$instance = null;
 		$this->addRecursiveMarkerFor( $serviceName );
 
 		if ( !isset( $this->registry[$serviceName] ) ) {
