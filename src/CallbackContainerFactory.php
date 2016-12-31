@@ -33,7 +33,7 @@ class CallbackContainerFactory {
 	/**
 	 * @since 2.0
 	 *
-	 * @param ContainerBuilder|null $callbackContainer
+	 * @param ContainerBuilder|null $containerBuilder
 	 *
 	 * @return ServicesManager
 	 */
