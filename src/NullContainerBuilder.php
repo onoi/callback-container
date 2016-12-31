@@ -8,7 +8,7 @@ namespace Onoi\CallbackContainer;
  *
  * @author mwjames
  */
-class NullCallbackInstantiator implements CallbackInstantiator {
+class NullContainerBuilder implements ContainerBuilder {
 
 	/**
 	 * @since 1.0
@@ -23,6 +23,20 @@ class NullCallbackInstantiator implements CallbackInstantiator {
 	 * {@inheritDoc}
 	 */
 	public function registerCallbackContainer( CallbackContainer $callbackContainer ) {}
+
+	/**
+	 * @since 2.0
+	 *
+	 * {@inheritDoc}
+	 */
+	public function registerFromFile( $file ) {}
+
+	/**
+	 * @since 2.0
+	 *
+	 * {@inheritDoc}
+	 */
+	public function registerObject( $serviceName, $instance ) {}
 
 	/**
 	 * @since 1.0
