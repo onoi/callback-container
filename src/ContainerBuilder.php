@@ -5,12 +5,16 @@ namespace Onoi\CallbackContainer;
 use Closure;
 
 /**
+ * Interface to describe the implementation details for creating concrete instances
+ * of a service definition and resolving the dependency tree provided by the
+ * `ContainerRegistry`.
+ *
  * @license GNU GPL v2+
  * @since 1.2
  *
  * @author mwjames
  */
-interface ContainerBuilder extends ContainerRegistry {
+interface ContainerBuilder extends ServiceRegistry, ContainerRegistry {
 
 	/**
 	 * @since 1.2

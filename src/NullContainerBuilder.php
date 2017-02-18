@@ -15,7 +15,7 @@ class NullContainerBuilder implements ContainerBuilder {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerCallback( $handlerName, \Closure $callback ) {}
+	public function registerCallback( $serviceName, callable $callback ) {}
 
 	/**
 	 * @since 1.1
@@ -43,21 +43,28 @@ class NullContainerBuilder implements ContainerBuilder {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerExpectedReturnType( $handlerName, $type ) {}
+	public function registerExpectedReturnType( $serviceName, $type ) {}
+
+	/**
+	 * @since 2.0
+	 *
+	 * {@inheritDoc}
+	 */
+	public function registerAlias( $serviceName, $alias ) {}
 
 	/**
 	 * @since 1.2
 	 *
 	 * {@inheritDoc}
 	 */
-	public function isRegistered( $handlerName ) { return false; }
+	public function isRegistered( $serviceName ) { return false; }
 
 	/**
 	 * @since 1.1
 	 *
 	 * {@inheritDoc}
 	 */
-	public function create( $handlerName ) {}
+	public function create( $serviceName ) {}
 
 	/**
 	 * @since 1.0

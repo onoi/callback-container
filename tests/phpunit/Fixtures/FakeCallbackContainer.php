@@ -15,6 +15,11 @@ class FakeCallbackContainer implements CallbackContainer {
 
 	public function register( ContainerBuilder $containerBuilder ) {
 		$this->addCallbackHandlers( $containerBuilder );
+
+		return array(
+			'service.one'   => array( $this, 'getServiceOne' ),
+			'isNotCallable' => 'thereforeWontRegister'
+		);
 	}
 
 	private function addCallbackHandlers( $containerBuilder ) {
@@ -34,15 +39,21 @@ class FakeCallbackContainer implements CallbackContainer {
 			return $stdClass;
 		} );
 
-		$containerBuilder->registerCallback( 'FooWithNullArgument', function( $containerBuilder, $argument = null ) {
-			$containerBuilder->registerExpectedReturnType( 'FooWithNullArgument', '\stdClass' );
+		$containerBuilder->registerCallback( 'FooWithNullArgument', array( $this, 'newFooWithNullArgument' ) );
+	}
 
-			$stdClass = new \stdClass;
-			$stdClass->argument = $argument;
-			$stdClass->argumentWithArgument = $containerBuilder->create( 'FooWithArgument', $argument );
+	public static function getServiceOne( $containerBuilder, $argument = null ) {
+		return $containerBuilder->singleton( 'FooWithNullArgument', $argument );
+	}
 
-			return $stdClass;
-		} );
+	public static function newFooWithNullArgument( $containerBuilder, $argument = null ) {
+		$containerBuilder->registerExpectedReturnType( 'FooWithNullArgument', '\stdClass' );
+
+		$stdClass = new \stdClass;
+		$stdClass->argument = $argument;
+		$stdClass->argumentWithArgument = $containerBuilder->create( 'FooWithArgument', $argument );
+
+		return $stdClass;
 	}
 
 }

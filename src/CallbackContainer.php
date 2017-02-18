@@ -16,6 +16,8 @@ interface CallbackContainer {
 	 * @since 1.0
 	 *
 	 * @param ContainerBuilder $containerBuilder
+	 *
+	 * @return null|array
 	 */
 	public function register( ContainerBuilder $containerBuilder );
 

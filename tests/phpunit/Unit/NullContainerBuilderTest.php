@@ -40,6 +40,10 @@ class NullContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 		);
 
 		$this->assertNull(
+			$instance->registerAlias( 'Foo', 'bar' )
+		);
+
+		$this->assertNull(
 			$instance->registerObject( 'Foo', 'bar' )
 		);
 

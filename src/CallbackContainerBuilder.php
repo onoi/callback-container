@@ -8,6 +8,9 @@ use Onoi\CallbackContainer\Exception\ServiceCircularReferenceException;
 use Onoi\CallbackContainer\Exception\InvalidParameterTypeException;
 use Onoi\CallbackContainer\Exception\FileNotFoundException;
 use Onoi\CallbackContainer\Exception\ServiceNotFoundException;
+use Onoi\CallbackContainer\Exception\ServiceAliasCrossAssignmentException;
+use Onoi\CallbackContainer\Exception\ServiceAliasAssignmentException;
+use Onoi\CallbackContainer\Exception\ServiceAliasMismatchException;
 
 /**
  * @license GNU GPL v2+
@@ -35,12 +38,17 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	/**
 	 * @var array
 	 */
+	protected $aliases = array();
+
+	/**
+	 * @var array
+	 */
 	protected $recursiveMarker = array();
 
 	/**
 	 * @since 2.0
 	 *
-	 * @param CallbackContainer|null $callbackContainer
+	 * {@inheritDoc}
 	 */
 	public function __construct( CallbackContainer $callbackContainer = null ) {
 		if ( $callbackContainer !== null ) {
@@ -51,34 +59,10 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	/**
 	 * @since 2.0
 	 *
-	 * @param CallbackContainer $callbackContainer
+	 * {@inheritDoc}
 	 */
 	public function registerCallbackContainer( CallbackContainer $callbackContainer ) {
-		$callbackContainer->register( $this );
-	}
-
-	/**
-	 * @since 2.0
-	 *
-	 * @param string $file
-	 * @throws FileNotFoundException
-	 */
-	public function registerFromFile( $file ) {
-
-		if ( !is_readable( ( $file = str_replace( array( '\\', '/' ), DIRECTORY_SEPARATOR, $file ) ) ) ) {
-			throw new FileNotFoundException( "Cannot access or read {$file}" );
-		}
-
-		$defintions = require $file;
-
-		foreach ( $defintions as $serviceName => $callback ) {
-
-			if ( !is_callable( $callback ) ) {
-				continue;
-			}
-
-			$this->registerCallback( $serviceName, $callback );
-		}
+		$this->register( $callbackContainer->register( $this ) );
 	}
 
 	/**
@@ -86,7 +70,21 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 *
 	 * {@inheritDoc}
 	 */
-	public function registerCallback( $serviceName, Closure $callback ) {
+	public function registerFromFile( $file ) {
+
+		if ( !is_readable( ( $file = str_replace( array( '\\', '/' ), DIRECTORY_SEPARATOR, $file ) ) ) ) {
+			throw new FileNotFoundException( "Cannot access or read {$file}" );
+		}
+
+		$this->register( require $file );
+	}
+
+	/**
+	 * @since 2.0
+	 *
+	 * {@inheritDoc}
+	 */
+	public function registerCallback( $serviceName, callable $callback ) {
 
 		if ( !is_string( $serviceName ) ) {
 			throw new InvalidParameterTypeException( "Expected a string" );
@@ -101,13 +99,16 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 *
 	 * @since 2.0
 	 *
-	 * @param string $serviceName
-	 * @param mixed $instance
+	 * {@inheritDoc}
 	 */
 	public function registerObject( $serviceName, $instance ) {
 
 		if ( !is_string( $serviceName ) ) {
 			throw new InvalidParameterTypeException( "Expected a string" );
+		}
+
+		if ( isset( $this->aliases[$serviceName] ) ) {
+			throw new ServiceAliasMismatchException( $serviceName );
 		}
 
 		unset( $this->singletons[$serviceName] );
@@ -135,7 +136,34 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 *
 	 * {@inheritDoc}
 	 */
+	public function registerAlias( $serviceName, $alias ) {
+
+		if ( !is_string( $serviceName ) || !is_string( $alias ) ) {
+			throw new InvalidParameterTypeException( "Expected a string" );
+		}
+
+		if ( isset( $this->registry[$alias] ) ) {
+			throw new ServiceAliasAssignmentException( $alias );
+		}
+
+		if ( isset( $this->aliases[$alias] ) && $this->aliases[$alias] !== $serviceName ) {
+			throw new ServiceAliasCrossAssignmentException( $serviceName, $alias, $this->aliases[$alias] );
+		}
+
+		$this->aliases[$alias] = $serviceName;
+	}
+
+	/**
+	 * @since 2.0
+	 *
+	 * {@inheritDoc}
+	 */
 	public function isRegistered( $serviceName ) {
+
+		if ( is_string( $serviceName ) && isset( $this->aliases[$serviceName] ) ) {
+			$serviceName = $this->aliases[$serviceName];
+		}
+
 		return isset( $this->registry[$serviceName] );
 	}
 
@@ -145,6 +173,11 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 * {@inheritDoc}
 	 */
 	public function create( $serviceName ) {
+
+		if ( is_string( $serviceName ) && isset( $this->aliases[$serviceName] ) ) {
+			$serviceName = $this->aliases[$serviceName];
+		}
+
 		return $this->getReturnValueFromCallbackHandlerFor( $serviceName, func_get_args() );
 	}
 
@@ -154,6 +187,11 @@ class CallbackContainerBuilder implements ContainerBuilder {
 	 * {@inheritDoc}
 	 */
 	public function singleton( $serviceName ) {
+
+		if (  is_string( $serviceName ) && isset( $this->aliases[$serviceName] ) ) {
+			$serviceName = $this->aliases[$serviceName];
+		}
+
 		return $this->getReturnValueFromSingletonFor( $serviceName, func_get_args() );
 	}
 
@@ -166,6 +204,25 @@ class CallbackContainerBuilder implements ContainerBuilder {
 		unset( $this->registry[$serviceName] );
 		unset( $this->singletons[$serviceName] );
 		unset( $this->expectedReturnTypeByHandler[$serviceName] );
+
+		foreach ( $this->aliases as $alias => $service ) {
+			if ( $service === $serviceName ) {
+				unset( $this->aliases[$alias] );
+			}
+		}
+	}
+
+	private function register( $serviceDefinitions ) {
+
+		if ( !is_array( $serviceDefinitions ) ) {
+			return;
+		}
+
+		foreach ( $serviceDefinitions as $serviceName => $callback ) {
+			if ( is_callable( $callback ) ) {
+				$this->registry[$serviceName] = $callback;
+			}
+		}
 	}
 
 	private function addRecursiveMarkerFor( $serviceName ) {

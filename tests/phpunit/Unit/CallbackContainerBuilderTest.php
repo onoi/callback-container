@@ -70,12 +70,21 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 			return 'abc';
 		} );
 
-		$this->assertEquals(
-			'abc',
-			$instance->create( 'Foo' )
+		$instance->registerAlias( 'Foo', 'Foobar' );
+
+		$this->assertTrue(
+			$instance->isRegistered( 'Foo' )
 		);
 
 		$instance->deregister( 'Foo' );
+
+		$this->assertFalse(
+			$instance->isRegistered( 'Foo' )
+		);
+
+		$this->assertFalse(
+			$instance->isRegistered( 'Foobar' )
+		);
 	}
 
 	public function testLoadCallbackHandlerWithExpectedReturnType() {
@@ -218,7 +227,11 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 			new FakeCallbackContainer()
 		);
 
-		$instance->singleton( 'FooWithNullArgument', $argument );
+		$this->assertSame(
+			$instance->singleton( 'FooWithNullArgument', $argument ),
+			$instance->singleton( 'service.one', $argument )
+		);
+
 		$override = $instance->singleton( 'FooWithNullArgument', null );
 
 		$this->assertNotSame(
@@ -338,6 +351,76 @@ class CallbackContainerBuilderTest extends \PHPUnit_Framework_TestCase {
 			$instance->singleton( 'Foo', 'abc', array( '123' ) ),
 			$instance->singleton( 'Foo', 'abc', array( 'def' ) )
 		);
+	}
+
+	public function testRegisterAlias() {
+
+		$instance = new CallbackContainerBuilder();
+
+		$instance->registerCallback( 'Foo', function( $containerBuilder ) {
+			return new \stdClass;
+		} );
+
+		$instance->registerAlias( 'Foo', 'Foobar' );
+		$instance->registerExpectedReturnType( 'Foo', '\stdClass' );
+
+		$this->assertTrue(
+			$instance->isRegistered( 'Foobar' )
+		);
+
+		$this->assertInstanceOf(
+			'\stdClass',
+			$instance->create( 'Foobar' )
+		);
+
+		$this->assertInstanceOf(
+			'\stdClass',
+			$instance->singleton( 'Foobar' )
+		);
+	}
+
+	public function testRegisterAliasOnExistingServiceNameThrowsException() {
+
+		$instance = new CallbackContainerBuilder();
+
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\InvalidParameterTypeException' );
+		$instance->registerAlias( 'Foo', 123 );
+	}
+
+	public function testRegisterAliasOnInvalidNameThrowsException() {
+
+		$instance = new CallbackContainerBuilder();
+
+		$instance->registerCallback( 'Foo', function() {
+			return new \stdClass;
+		} );
+
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceAliasAssignmentException' );
+		$instance->registerAlias( 'Foo', 'Foo' );
+	}
+
+	public function testRegisterAliasOnCrossedServiceAssignmentThrowsException() {
+
+		$instance = new CallbackContainerBuilder();
+
+		$instance->registerCallback( 'Foo', function() {
+			return new \stdClass;
+		} );
+
+		$instance->registerAlias( 'Foo', 'Foobar' );
+
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceAliasCrossAssignmentException' );
+		$instance->registerAlias( 'Foo2', 'Foobar' );
+	}
+
+	public function testRegisterObjectWithAliasThrowsException() {
+
+		$instance = new CallbackContainerBuilder();
+
+		$instance->registerAlias( 'Foo', 'Foobar' );
+
+		$this->setExpectedException( '\Onoi\CallbackContainer\Exception\ServiceAliasMismatchException' );
+		$instance->registerObject( 'Foobar', new \stdClass );
 	}
 
 	public function testUnregisteredServiceOnCreateThrowsException() {

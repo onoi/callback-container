@@ -1,6 +1,14 @@
-## Usage
 
-### Using the CallbackContainer
+- `CallbackContainerFactory` provides the general access to the classes of this library
+- `CallbackContainer` is an interface that describes a container to be registered
+  with a `ContainerBuilder`
+- `ContainerBuilder` is an interface that describes the implementation details for
+  creating concrete instances of a service definition and resolving the dependency
+  tree provided by the `ContainerRegistry`
+- `CallbackContainerBuilder` provides an implementation of the `ContainerBuilder`
+  interface
+
+## Using a container
 
 ```php
 class FooCallbackContainer implements CallbackContainer {
@@ -41,7 +49,7 @@ $instance = $containerBuilder->singleton(
 );
 ```
 
-### Using a service file
+## Using a service file
 
 ```php
 return array(
@@ -58,6 +66,7 @@ return array(
 	 */
 	'AnotherServiceFromFile' => function( $containerBuilder, $argument1, $argument2 ) {
 		$containerBuilder->registerExpectedReturnType( 'AnotherServiceFromFile', '\stdClass' )
+		$containerBuilder->registerAlias( 'AnotherServiceFromFile', 'ServiceAliasFromFile' )
 
 		$service = $containerBuilder->create( 'SomeServiceFromFile' );
 		$service->argument1 = $argument1;
@@ -76,7 +85,6 @@ $containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
 $containerBuilder->registerFromFile( __DIR__ . '/Foo.php' );
 $someServiceFromFile = $containerBuilder->create( 'SomeServiceFromFile' );
 $anotherServiceFromFile = $containerBuilder->create( 'AnotherServiceFromFile', 'Foo', 'Bar' );
-
 ```
 
 ### ContainerRegistry::registerExpectedReturnType

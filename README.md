@@ -13,7 +13,8 @@ deployed as independent library.
 
 ## Requirements
 
-PHP 5.3 / HHVM 3.5 or later
+* PHP 5.5
+* HHVM 3.5 or later
 
 ## Installation
 
@@ -36,11 +37,15 @@ use Onoi\CallbackContainer\CallbackContainerFactory;
 $callbackContainerFactory = new CallbackContainerFactory();
 $containerBuilder = $callbackContainerFactory->newCallbackContainerBuilder();
 
-...
+$containerBuilder->registerCallbackContainer( ... );
+
+$service = $containerBuilder->create( ... );
+$service = $containerBuilder->singleton( ... );
+
 ```
 
-[usage.md](/docs/usage.md) contains examples on how the classes and functions
-of this library can be used.
+This [document](/docs/usage.md) contains detailed examples on how to use the `CallbackContainerFactory`
+and `ContainerBuilder`.
 
 ## Contribution and support
 
@@ -59,8 +64,10 @@ The library provides unit tests that covers the core-functionality normally run 
 
 ## Release notes
 
-- 2.0.0 (2016-12-31)
+- 2.0.0 (2017-02-18)
+ - Requires PHP 5.5+
  - Added `CallbackContainerFactory`
+ - Added `CallbackContainerBuilder::registerAlias`
  - Added `CallbackContainerBuilder::registerFromFile` to allow loading callback
    definitions from a file
 
